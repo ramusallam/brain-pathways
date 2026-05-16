@@ -7,7 +7,6 @@
 <style>
   :root {
     --bg-0: #0a0a0a;
-    --bg-1: #141414;
     --ink-hi: #f5f5f5;
     --ink-mid: #a0a0a0;
     --ink-low: #6b7280;
@@ -16,20 +15,6 @@
     --panel-border: rgba(255,255,255,0.10);
     --note-bg: #fdf1c6;
     --note-ink: #2a1e08;
-    /* Region semantic colors */
-    --r-frontal: #ff8fa3;
-    --r-motor: #ff6b6b;
-    --r-parietal: #7dd3fc;
-    --r-occipital: #a78bfa;
-    --r-temporal: #5eead4;
-    --r-thalamus: #c4b5fd;
-    --r-hippocampus: #ffd166;
-    --r-amygdala: #f87171;
-    --r-hypothalamus: #fb923c;
-    --r-accumbens: #fbbf24;
-    --r-basal: #84cc16;
-    --r-cerebellum: #4ade80;
-    --r-brainstem: #22d3ee;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
@@ -143,12 +128,6 @@
     color: #f9a8d4;
   }
   button.chip.warm:hover { background: rgba(244, 114, 182, 0.18); }
-  button.chip.cool {
-    background: rgba(94, 234, 212, 0.08);
-    border-color: rgba(94, 234, 212, 0.35);
-    color: #99f6e4;
-  }
-  button.chip.cool:hover { background: rgba(94, 234, 212, 0.18); }
   .content { margin-top: 14px; }
   .notes-card {
     background: var(--note-bg);
@@ -289,17 +268,16 @@
 </main>
 
 <script>
-// =====================================================
-//  Canvas setup
-// =====================================================
+// ============================================================================
+// COLORS & CONSTANTS
+// ============================================================================
+
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const W = canvas.width;   // 1600
 const H = canvas.height;  // 650
 
-// =====================================================
-//  Color tokens
-// =====================================================
+// Region / input / output color tokens used by every canvas drawer.
 const C = {
   accent: '#6366f1',
   frontal: '#ff8fa3',
@@ -334,9 +312,10 @@ function rgba(hex, a) {
   return `rgba(${r},${g},${b},${a})`;
 }
 
-// =====================================================
-//  Helpers
-// =====================================================
+// ============================================================================
+// GEOMETRY HELPERS
+// ============================================================================
+
 function lerp(a, b, t) { return a + (b - a) * t; }
 function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
 function easeInOut(t) { return t * t * (3 - 2 * t); }
@@ -355,11 +334,11 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-// =====================================================
-//  Brain region data — anatomical positions
-//  kind: 'lobe' (cortex polygon), 'deep' (subcortical shape),
-//        'cerebellum', 'brainstem'
-// =====================================================
+// ============================================================================
+// REGION / INPUT / OUTPUT DATA
+// ============================================================================
+// Brain region positions + roles.
+//   kind: 'lobe' (cortex polygon) | 'deep' (subcortical shape) | 'cerebellum' | 'brainstem'
 const REGIONS = {
   // Cortex lobes
   frontal:      { x: 515, y: 230, r: 60, color: C.frontal, label: 'Frontal Lobe', role: 'Plans, decides, inhibits, evaluates', kind: 'lobe' },
@@ -393,11 +372,12 @@ const OUTPUTS = {
   gland:       { x: 1470, y: 490, r: 32, label: 'Adrenal Gland', color: C.gland },
 };
 
-// =====================================================
-//  Lobe path definitions — closed polygons via beziers.
-//  All lobes share boundary curves so the brain reads as
-//  one anatomical surface, divided by sulci.
-// =====================================================
+// ============================================================================
+// ANATOMY DRAWERS
+// ============================================================================
+// Lobe path definitions — closed polygons via beziers. All lobes share
+// boundary curves so the brain reads as one anatomical surface, divided
+// by sulci.
 function pathFrontal(ctx) {
   ctx.beginPath();
   ctx.moveTo(430, 175);
@@ -461,9 +441,7 @@ const LOBE_PATHS = {
   motor: pathMotor,
 };
 
-// =====================================================
-//  Anatomical cerebrum — silhouette + cortex base + sulci + gyri
-// =====================================================
+// Anatomical cerebrum — silhouette + cortex base + sulci + gyri.
 function drawCerebrumAnatomy(ctx, opts = {}) {
   const alpha = opts.alpha != null ? opts.alpha : 1;
   ctx.save();
@@ -581,9 +559,7 @@ function drawCerebrumAnatomy(ctx, opts = {}) {
   ctx.restore();
 }
 
-// =====================================================
-//  Lobe activation overlay — colored tint inside lobe polygon
-// =====================================================
+// Lobe activation overlay — colored tint inside lobe polygon.
 function drawLobeActivation(ctx, key, activation, t, highlight) {
   const fn = LOBE_PATHS[key];
   if (!fn) return;
@@ -619,9 +595,7 @@ function drawLobeActivation(ctx, key, activation, t, highlight) {
   ctx.restore();
 }
 
-// =====================================================
-//  Deep structure helpers (subcortical anatomical shapes)
-// =====================================================
+// Deep-structure drawers (subcortical anatomical shapes).
 function drawDeepPulse(ctx, r, activation, t, radius) {
   if (activation < 0.1) return;
   const phase = ((t || 0) / 600 + r.x * 0.005) % 1;
@@ -784,9 +758,7 @@ function drawBasalGanglia(ctx, activation, t) {
   ctx.restore();
 }
 
-// =====================================================
-//  Cerebellum — anatomical lateral view with dense folia
-// =====================================================
+// Cerebellum — anatomical lateral view with dense folia.
 function drawCerebellum(ctx, activation, t) {
   const r = REGIONS.cerebellum;
   ctx.save();
@@ -865,9 +837,7 @@ function drawCerebellum(ctx, activation, t) {
   ctx.restore();
 }
 
-// =====================================================
-//  Brain stem — 3-segment tube (midbrain, pons, medulla)
-// =====================================================
+// Brain stem — 3-segment tube (midbrain, pons, medulla).
 function drawBrainStem(ctx, activation, t) {
   const r = REGIONS.brainstem;
   const cx = r.x;
@@ -939,9 +909,7 @@ function drawBrainStem(ctx, activation, t) {
   ctx.restore();
 }
 
-// =====================================================
-//  Region dispatcher — calls the right anatomical drawer
-// =====================================================
+// Region dispatcher — calls the right anatomical drawer.
 function drawRegion(ctx, key, opts = {}) {
   const r = REGIONS[key];
   if (!r) return;
@@ -965,9 +933,7 @@ function drawRegion(ctx, key, opts = {}) {
   }
 }
 
-// =====================================================
-//  Spinal cord — vertical tube descending from brain stem
-// =====================================================
+// Spinal cord — vertical tube descending from brain stem.
 function drawSpinalCord(ctx, activation, t) {
   const n = OUTPUTS.spinal;
   ctx.save();
@@ -1051,9 +1017,7 @@ function drawSpinalCord(ctx, activation, t) {
   ctx.restore();
 }
 
-// =====================================================
-//  Sensory organs — anatomical illustrations
-// =====================================================
+// Sensory organs — anatomical illustrations.
 function drawEye(ctx, opts = {}) {
   const n = INPUTS.eye;
   const t = opts.t || 0;
@@ -1378,9 +1342,7 @@ function drawHand(ctx, opts = {}) {
   ctx.restore();
 }
 
-// =====================================================
-//  Body outputs — anatomical illustrations
-// =====================================================
+// Body outputs — anatomical illustrations.
 function drawMuscle(ctx, opts = {}) {
   const n = OUTPUTS.muscle;
   const t = opts.t || 0;
@@ -1622,9 +1584,7 @@ function drawMotorNeuron(ctx, opts = {}) {
   ctx.restore();
 }
 
-// =====================================================
-//  Input / Output dispatchers
-// =====================================================
+// Input / Output dispatchers.
 function drawInput(ctx, key, opts = {}) {
   if (key === 'eye') drawEye(ctx, opts);
   else if (key === 'ear') drawEar(ctx, opts);
@@ -1639,9 +1599,11 @@ function drawOutput(ctx, key, opts = {}) {
   else if (key === 'gland') drawGland(ctx, opts);
 }
 
-// =====================================================
-//  Get position for any node key (input, region, output)
-// =====================================================
+// ============================================================================
+// PATHWAY HELPERS
+// ============================================================================
+
+// Get position for any node key (input, region, output).
 function getNode(key) {
   if (REGIONS[key]) return REGIONS[key];
   if (INPUTS[key]) return INPUTS[key];
@@ -1649,9 +1611,7 @@ function getNode(key) {
   return null;
 }
 
-// =====================================================
-//  Draw a pathway segment between two nodes with optional glow
-// =====================================================
+// Draw a pathway segment between two nodes with optional glow.
 function drawPathwaySegment(ctx, fromKey, toKey, opts = {}) {
   const a = getNode(fromKey);
   const b = getNode(toKey);
@@ -1710,9 +1670,7 @@ function quadPoint(a, mx, my, b, t) {
   return { x, y };
 }
 
-// =====================================================
-//  Animate a glowing pulse along a pathway sequence
-// =====================================================
+// Animate a glowing pulse along a pathway segment.
 function drawSignalPulse(ctx, fromKey, toKey, progress, opts = {}) {
   const a = getNode(fromKey);
   const b = getNode(toKey);
@@ -1773,9 +1731,11 @@ function drawSignalPulse(ctx, fromKey, toKey, progress, opts = {}) {
   return p;
 }
 
-// =====================================================
-//  Glassmorphic label
-// =====================================================
+// ============================================================================
+// LABELS
+// ============================================================================
+
+// Glassmorphic floating label with leader line.
 function drawLabel(ctx, text, lx, ly, tx, ty, color = '#ffd166', fontSize = 13) {
   const [r, g, b] = hexToRgb(color);
   ctx.save();
@@ -1833,40 +1793,15 @@ function drawLabel(ctx, text, lx, ly, tx, ty, color = '#ffd166', fontSize = 13) 
   ctx.restore();
 }
 
-// =====================================================
-//  Draw region label directly above/below the region
-// =====================================================
-function drawRegionLabel(ctx, key, opts = {}) {
-  const r = REGIONS[key];
-  if (!r) return;
-  const dir = opts.dir || 'auto';
-  let lx, ly;
-  if (dir === 'auto') {
-    // place outside the brain silhouette based on coarse position
-    if (r.y < 200) { lx = r.x; ly = r.y - r.r - 24; }
-    else if (r.y > 420) { lx = r.x; ly = r.y + r.r + 24; }
-    else if (r.x < 600) { lx = r.x - r.r - 70; ly = r.y; }
-    else { lx = r.x + r.r + 70; ly = r.y; }
-  } else if (dir === 'top') { lx = r.x; ly = r.y - r.r - 22; }
-  else if (dir === 'bottom') { lx = r.x; ly = r.y + r.r + 22; }
-  else if (dir === 'left') { lx = r.x - r.r - 80; ly = r.y; }
-  else if (dir === 'right') { lx = r.x + r.r + 80; ly = r.y; }
-  drawLabel(ctx, r.label, lx, ly, r.x, r.y, r.color, opts.fontSize || 12);
-}
-
-// =====================================================
-//  Base brain anatomy — drawn once per frame as the foundation.
-//  Cerebellum, brain stem, and spinal cord are drawn via drawAllNodes
-//  (their activation state is per-scene).
-// =====================================================
+// Base brain anatomy — drawn once per frame as the foundation. Cerebellum,
+// brain stem, and spinal cord are drawn via drawAllNodes (their activation
+// state is per-scene).
 function drawBrainBase(ctx, opts = {}) {
   drawCerebrumAnatomy(ctx, { alpha: opts.silhouetteAlpha != null ? opts.silhouetteAlpha : 1 });
 }
 
-// =====================================================
-//  Persistent label layouts — anchor outside the brain, with leader lines
-//  to the structure. Active regions get bolder labels.
-// =====================================================
+// Persistent label layouts — anchor outside the brain, with leader lines
+// to the structure. Active regions get bolder labels.
 const LABEL_LAYOUTS = {
   // Lobes — outside the cerebrum
   frontal:      { lx: 345, ly: 170 },
@@ -1934,54 +1869,57 @@ function drawAllLabels(ctx, activationMap) {
   });
 }
 
-// =====================================================
-//  State
-// =====================================================
+// ============================================================================
+// SCENES
+// ============================================================================
+// Shared scene state + mouse plumbing.
+
 let currentSceneIdx = 0;
 let animT = 0;
 let sceneFadeT = 0;
 let sceneLocal = {};
-let mouseX = -1, mouseY = -1;
-let mouseDown = false;
 
 function clearField() { sceneLocal = {}; }
 
-canvas.addEventListener('mousemove', (e) => {
+// Translate a DOM mouse event into canvas-space coords.
+function canvasXY(e) {
   const rect = canvas.getBoundingClientRect();
-  mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
-  mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+  return {
+    x: (e.clientX - rect.left) * (canvas.width / rect.width),
+    y: (e.clientY - rect.top) * (canvas.height / rect.height),
+  };
+}
+
+canvas.addEventListener('mousemove', (e) => {
   const s = scenes[currentSceneIdx];
-  if (s && s.onMouseMove) s.onMouseMove(mouseX, mouseY);
+  if (!s || !s.onMouseMove) return;
+  const { x, y } = canvasXY(e);
+  s.onMouseMove(x, y);
 });
 canvas.addEventListener('mouseleave', () => {
-  mouseX = -1; mouseY = -1;
   const s = scenes[currentSceneIdx];
   if (s && s.onMouseMove) s.onMouseMove(-1, -1);
 });
 canvas.addEventListener('mousedown', (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-  const y = (e.clientY - rect.top) * (canvas.height / rect.height);
-  mouseDown = true;
   const s = scenes[currentSceneIdx];
-  if (s && s.onMouseDown) s.onMouseDown(x, y);
+  if (!s || !s.onMouseDown) return;
+  const { x, y } = canvasXY(e);
+  s.onMouseDown(x, y);
 });
-canvas.addEventListener('mouseup', (e) => {
-  mouseDown = false;
+canvas.addEventListener('mouseup', () => {
   const s = scenes[currentSceneIdx];
   if (s && s.onMouseUp) s.onMouseUp();
 });
 canvas.addEventListener('click', (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-  const y = (e.clientY - rect.top) * (canvas.height / rect.height);
   const s = scenes[currentSceneIdx];
-  if (s && s.onClick) s.onClick(x, y);
+  if (!s || !s.onClick) return;
+  const { x, y } = canvasXY(e);
+  s.onClick(x, y);
 });
 
-// =====================================================
-//  SCENE 1: Intro — From Neuron to Brain Systems
-// =====================================================
+// ----------------------------------------------------------------------------
+// SCENE 1: Intro — From Neuron to Brain Systems
+// ----------------------------------------------------------------------------
 const sceneIntro = {
   phase: 'Step 1: From Neuron to Brain Systems',
   phaseColor: '#ffd166',
@@ -2125,10 +2063,10 @@ function updateIntroControls() {
   if (next) next.disabled = sceneLocal.phaseIdx === 2;
 }
 
-// =====================================================
-//  Seeded RNG + dendrite tree (ported from the Action Potential
-//  and Synapse apps so Phase 1 / Phase 2 of the intro match)
-// =====================================================
+// ----------------------------------------------------------------------------
+// INTRO HELPERS — Seeded RNG + dendrite tree (ported from the Action Potential
+// and Synapse apps so Phase 1 / Phase 2 of the intro match those visuals).
+// ----------------------------------------------------------------------------
 function seededRng(seed) {
   let s = seed;
   return function() { s = (s * 16807) % 2147483647; return s / 2147483647; };
@@ -2150,10 +2088,8 @@ function buildDendriteTree(x0, y0, angle, length, depth, rng, segments = []) {
   return segments;
 }
 
-// =====================================================
-//  Phase 1: Review — the Action Potential app neuron
-//  Detailed dendrite tree, soma + nucleus, long axon, terminal bouquet
-// =====================================================
+// Phase 1 of intro: review — the Action Potential app neuron.
+// Detailed dendrite tree, soma + nucleus, long axon, terminal bouquet.
 function drawReviewNeuron(ctx, progress, t) {
   const MID = 340;
   const rng = seededRng(7);
@@ -2290,11 +2226,9 @@ function drawReviewNeuron(ctx, progress, t) {
   ctx.restore();
 }
 
-// =====================================================
-//  Phase 2: Review — the Synapse app cleft
-//  Presynaptic bouton (mushroom) + cleft + postsynaptic dendrite,
-//  vesicles inside the bouton, NTs flowing across, receptors waiting
-// =====================================================
+// Phase 2 of intro: review — the Synapse app cleft.
+// Presynaptic bouton (mushroom) + cleft + postsynaptic dendrite,
+// vesicles inside the bouton, NTs flowing across, receptors waiting.
 function drawReviewSynapse(ctx, progress, t) {
   const MID = 340;
   const PRE_X = 720;     // presynaptic membrane facing cleft
@@ -2477,9 +2411,7 @@ function drawReviewSynapse(ctx, progress, t) {
   ctx.restore();
 }
 
-// =====================================================
-//  Intro heading helper — consistent backdrop pill on every phase
-// =====================================================
+// Intro heading helper — consistent backdrop pill on every intro phase.
 function drawIntroHeading(ctx, title, subtitle, fade, accent) {
   ctx.save();
   ctx.globalAlpha = fade;
@@ -2510,9 +2442,9 @@ function drawIntroHeading(ctx, title, subtitle, fade, accent) {
   ctx.restore();
 }
 
-// =====================================================
-//  SCENE 2: The Brain Map (interactive region explorer)
-// =====================================================
+// ----------------------------------------------------------------------------
+// SCENE 2: The Brain Map (interactive region explorer)
+// ----------------------------------------------------------------------------
 const sceneBrainMap = {
   phase: 'Step 2: The Brain Map',
   phaseColor: '#c4b5fd',
@@ -2663,55 +2595,6 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
   ctx.fillText(line, x, yy);
 }
 
-// =====================================================
-//  Pathway tracer — animates a sequence of node keys with glowing pulses
-// =====================================================
-function tracePathway(ctx, nodes, t, opts = {}) {
-  if (!nodes || nodes.length < 2) return null;
-  const speed = opts.speed || 0.0006;
-  const loop = opts.loop !== false;
-  const color = opts.color || '#ffd166';
-  // Compute progress through whole sequence
-  const segCount = nodes.length - 1;
-  const totalT = (t * speed) % (loop ? 1 : Infinity);
-  const segProgress = totalT * segCount;
-  const currentSeg = Math.floor(segProgress);
-  const inSegT = segProgress - currentSeg;
-
-  // Draw all segments with activation level
-  for (let i = 0; i < segCount; i++) {
-    let activation;
-    if (i < currentSeg) activation = 0.9; // already fired
-    else if (i === currentSeg) activation = 0.4 + inSegT * 0.5;
-    else activation = 0.15;
-    drawPathwaySegment(ctx, nodes[i], nodes[i+1], { color, active: activation });
-  }
-
-  // Draw current pulse position
-  if (currentSeg < segCount) {
-    const a = getNode(nodes[currentSeg]);
-    const b = getNode(nodes[currentSeg + 1]);
-    if (a && b) {
-      drawSignalPulse(ctx, nodes[currentSeg], nodes[currentSeg + 1], inSegT, { color });
-    }
-  }
-
-  return { currentSeg, inSegT };
-}
-
-// Compute which nodes are "lit" based on pathway progress
-function getActivationMap(nodes, traceState) {
-  const map = {};
-  if (!traceState) return map;
-  for (let i = 0; i <= traceState.currentSeg && i < nodes.length; i++) {
-    map[nodes[i]] = 1;
-  }
-  if (traceState.currentSeg + 1 < nodes.length) {
-    map[nodes[traceState.currentSeg + 1]] = traceState.inSegT;
-  }
-  return map;
-}
-
 // Draw all nodes (regions/inputs/outputs) with activation from a map.
 // Also draws persistent labels on every brain region.
 function drawAllNodes(ctx, t, activationMap, dimUnlit) {
@@ -2731,9 +2614,9 @@ function drawAllNodes(ctx, t, activationMap, dimUnlit) {
   drawAllLabels(ctx, activationMap);
 }
 
-// =====================================================
-//  SCENE 3: The Universal Pathway
-// =====================================================
+// ----------------------------------------------------------------------------
+// SCENE 3: The Universal Pathway
+// ----------------------------------------------------------------------------
 const sceneUniversalPathway = {
   phase: 'Step 3: The Standard Pathway',
   phaseColor: '#c7d2fe',
@@ -2851,10 +2734,10 @@ function updateUpControls() {
   if (window.updateUpControls) window.updateUpControls();
 }
 
-// =====================================================
-//  Step-by-step helper — scenes that want students to drive the
-//  impulse one segment at a time use these.
-// =====================================================
+// ----------------------------------------------------------------------------
+// STEP-BY-STEP HELPERS — scenes that want students to drive the impulse one
+// segment at a time use these.
+// ----------------------------------------------------------------------------
 function setupStepByStep(nodes) {
   sceneLocal.nodes = nodes;
   sceneLocal.stepIdx = 0;
@@ -2944,9 +2827,9 @@ function bindStepControls() {
   refreshStepControls();
 }
 
-// =====================================================
-//  SCENE 4: The Reflex Arc
-// =====================================================
+// ----------------------------------------------------------------------------
+// SCENE 4: The Reflex Arc
+// ----------------------------------------------------------------------------
 const sceneReflex = {
   phase: 'Step 4: The Reflex Arc (Touch + Pain Shortcut)',
   phaseColor: C.skin,
@@ -2962,17 +2845,12 @@ const sceneReflex = {
     drawBrainBase(ctx, {});
     drawStepByStep(ctx, t, '#ff6b6b');
 
-    drawStimulusBadge(ctx, 90, 540, '🔥', 'Hot stove (pain)', '#ff6b6b');
-    drawResponseBadge(ctx, 1490, 240, '✋', 'Hand pulls away', '#ff8fa3');
-    ctx.save();
-    ctx.font = '700 14px -apple-system, system-ui';
-    ctx.fillStyle = '#ff6b6b';
-    ctx.textAlign = 'left';
-    ctx.fillText('Sensory modality: PAIN + TOUCH', 460, 30);
-    ctx.fillStyle = '#a0a0a0';
-    ctx.font = '400 12px -apple-system, system-ui';
-    ctx.fillText('Press Next Step to follow the impulse. The brain is NOT involved in the reflex.', 460, 50);
-    ctx.restore();
+    drawSceneOverlay(ctx, {
+      stimEmoji: '🔥', stimLabel: 'Hot stove (pain)', stimColor: '#ff6b6b',
+      respEmoji: '✋', respLabel: 'Hand pulls away', respColor: '#ff8fa3',
+      modality: 'PAIN + TOUCH', modalityColor: '#ff6b6b',
+      instruction: 'Press Next Step to follow the impulse. The brain is NOT involved in the reflex.',
+    });
   },
   isInteractive: true,
   controlsHTML: STEP_CONTROLS_HTML,
@@ -3053,9 +2931,27 @@ function drawResponseBadge(ctx, x, y, emoji, label, color) {
   ctx.restore();
 }
 
-// =====================================================
-//  SCENE 5: Fear Pathway
-// =====================================================
+// Shared step-by-step scene overlay: stim badge (bottom-left), response badge
+// (top-right), and the "Sensory modality:" header + instruction subtitle at
+// top-center-left. Used by sceneReflex, sceneFear, sceneSmellMemory,
+// sceneReward, sceneMovement.
+function drawSceneOverlay(ctx, opts) {
+  drawStimulusBadge(ctx, 90, 540, opts.stimEmoji, opts.stimLabel, opts.stimColor);
+  drawResponseBadge(ctx, 1490, 240, opts.respEmoji, opts.respLabel, opts.respColor);
+  ctx.save();
+  ctx.font = '700 14px -apple-system, system-ui';
+  ctx.fillStyle = opts.modalityColor;
+  ctx.textAlign = 'left';
+  ctx.fillText('Sensory modality: ' + opts.modality, 460, 30);
+  ctx.fillStyle = '#a0a0a0';
+  ctx.font = '400 12px -apple-system, system-ui';
+  ctx.fillText(opts.instruction, 460, 50);
+  ctx.restore();
+}
+
+// ----------------------------------------------------------------------------
+// SCENE 5: Fear Pathway
+// ----------------------------------------------------------------------------
 const sceneFear = {
   phase: 'Step 5: Fear Pathway (Hearing)',
   phaseColor: C.amygdala,
@@ -3071,17 +2967,12 @@ const sceneFear = {
     drawBrainBase(ctx, {});
     drawStepByStep(ctx, t, '#f87171');
 
-    drawStimulusBadge(ctx, 90, 540, '💥', 'Loud crash (sound)', '#f87171');
-    drawResponseBadge(ctx, 1490, 240, '💓', 'Heart races + body tenses', '#fb923c');
-    ctx.save();
-    ctx.font = '700 14px -apple-system, system-ui';
-    ctx.fillStyle = '#f87171';
-    ctx.textAlign = 'left';
-    ctx.fillText('Sensory modality: HEARING', 460, 30);
-    ctx.fillStyle = '#a0a0a0';
-    ctx.font = '400 12px -apple-system, system-ui';
-    ctx.fillText('Press Next Step to follow the impulse. Amygdala alarms the body through the hypothalamus.', 460, 50);
-    ctx.restore();
+    drawSceneOverlay(ctx, {
+      stimEmoji: '💥', stimLabel: 'Loud crash (sound)', stimColor: '#f87171',
+      respEmoji: '💓', respLabel: 'Heart races + body tenses', respColor: '#fb923c',
+      modality: 'HEARING', modalityColor: '#f87171',
+      instruction: 'Press Next Step to follow the impulse. Amygdala alarms the body through the hypothalamus.',
+    });
   },
   isInteractive: true,
   controlsHTML: STEP_CONTROLS_HTML,
@@ -3089,9 +2980,9 @@ const sceneFear = {
   bindControls() { bindStepControls(); }
 };
 
-// =====================================================
-//  SCENE 6: Smell + Memory
-// =====================================================
+// ----------------------------------------------------------------------------
+// SCENE 6: Smell + Memory
+// ----------------------------------------------------------------------------
 const sceneSmellMemory = {
   phase: 'Step 6: Memory Pathway (Smell)',
   phaseColor: C.nose,
@@ -3107,17 +2998,12 @@ const sceneSmellMemory = {
     drawBrainBase(ctx, {});
     drawStepByStep(ctx, t, '#ffd166');
 
-    drawStimulusBadge(ctx, 90, 540, '🍪', 'Smell of cookies', '#f472b6');
-    drawResponseBadge(ctx, 1490, 240, '💭', 'A memory returns', '#ffd166');
-    ctx.save();
-    ctx.font = '700 14px -apple-system, system-ui';
-    ctx.fillStyle = C.nose;
-    ctx.textAlign = 'left';
-    ctx.fillText('Sensory modality: SMELL (olfactory)', 460, 30);
-    ctx.fillStyle = '#a0a0a0';
-    ctx.font = '400 12px -apple-system, system-ui';
-    ctx.fillText('Press Next Step to follow the impulse. Smell skips the thalamus entirely.', 460, 50);
-    ctx.restore();
+    drawSceneOverlay(ctx, {
+      stimEmoji: '🍪', stimLabel: 'Smell of cookies', stimColor: '#f472b6',
+      respEmoji: '💭', respLabel: 'A memory returns', respColor: '#ffd166',
+      modality: 'SMELL (olfactory)', modalityColor: C.nose,
+      instruction: 'Press Next Step to follow the impulse. Smell skips the thalamus entirely.',
+    });
   },
   isInteractive: true,
   controlsHTML: STEP_CONTROLS_HTML,
@@ -3125,9 +3011,9 @@ const sceneSmellMemory = {
   bindControls() { bindStepControls(); }
 };
 
-// =====================================================
-//  SCENE 7: Movement Pathway (riding a bike)
-// =====================================================
+// ----------------------------------------------------------------------------
+// SCENE 7: Movement Pathway (riding a bike)
+// ----------------------------------------------------------------------------
 const sceneMovement = {
   phase: 'Step 9: Motor Coordination (Movement + Balance)',
   phaseColor: C.cerebellum,
@@ -3143,18 +3029,15 @@ const sceneMovement = {
     drawBrainBase(ctx, {});
     drawStepByStep(ctx, t, '#4ade80');
 
-    drawStimulusBadge(ctx, 90, 540, '🚴', 'Decide to ride a bike', '#84cc16');
-    drawResponseBadge(ctx, 1490, 240, '🦵', 'Pedal + balance', '#4ade80');
-    ctx.save();
-    ctx.font = '700 14px -apple-system, system-ui';
-    ctx.fillStyle = '#4ade80';
-    ctx.textAlign = 'left';
-    ctx.fillText('Sensory modality: PROPRIOCEPTION + BALANCE', 460, 30);
-    ctx.fillStyle = '#a0a0a0';
-    ctx.font = '400 12px -apple-system, system-ui';
-    ctx.fillText('Press Next Step to follow the impulse. The cerebellum fine-tunes balance and timing.', 460, 50);
+    drawSceneOverlay(ctx, {
+      stimEmoji: '🚴', stimLabel: 'Decide to ride a bike', stimColor: '#84cc16',
+      respEmoji: '🦵', respLabel: 'Pedal + balance', respColor: '#4ade80',
+      modality: 'PROPRIOCEPTION + BALANCE', modalityColor: '#4ade80',
+      instruction: 'Press Next Step to follow the impulse. The cerebellum fine-tunes balance and timing.',
+    });
     // Feedback loop arrow (drawn after pathway is complete)
     if (sceneLocal.stepIdx >= sceneLocal.nodes.length - 1) {
+      ctx.save();
       ctx.strokeStyle = 'rgba(74, 222, 128, 0.5)';
       ctx.lineWidth = 1.6;
       ctx.setLineDash([6, 6]);
@@ -3168,8 +3051,8 @@ const sceneMovement = {
       ctx.font = '600 11px -apple-system, system-ui';
       ctx.textAlign = 'center';
       ctx.fillText('feedback', 1230, 528);
+      ctx.restore();
     }
-    ctx.restore();
   },
   isInteractive: true,
   controlsHTML: STEP_CONTROLS_HTML,
@@ -3177,9 +3060,9 @@ const sceneMovement = {
   bindControls() { bindStepControls(); }
 };
 
-// =====================================================
-//  SCENE 8: Vision Deep Dive (eye dissection lead-in)
-// =====================================================
+// ----------------------------------------------------------------------------
+// SCENE 8: Vision Deep Dive (eye dissection lead-in)
+// ----------------------------------------------------------------------------
 const sceneVision = {
   phase: 'Step 10: Vision Deep Dive',
   phaseColor: C.occipital,
@@ -3285,9 +3168,9 @@ function drawEyeDiagram(ctx, x, y, t) {
   ctx.restore();
 }
 
-// =====================================================
-//  SCENE 9: Reward Pathway
-// =====================================================
+// ----------------------------------------------------------------------------
+// SCENE 9: Reward Pathway
+// ----------------------------------------------------------------------------
 const sceneReward = {
   phase: 'Step 7: Reward Pathway',
   phaseColor: C.accumbens,
@@ -3303,17 +3186,12 @@ const sceneReward = {
     drawBrainBase(ctx, {});
     drawStepByStep(ctx, t, C.accumbens);
 
-    drawStimulusBadge(ctx, 90, 540, '🏆', 'Winning / dessert / praise', '#fbbf24');
-    drawResponseBadge(ctx, 1490, 240, '✨', 'Pleasure + motivation', '#ffd166');
-    ctx.save();
-    ctx.font = '700 14px -apple-system, system-ui';
-    ctx.fillStyle = C.accumbens;
-    ctx.textAlign = 'left';
-    ctx.fillText('Sensory modality: VISION (reward cue)', 460, 30);
-    ctx.fillStyle = '#a0a0a0';
-    ctx.font = '400 12px -apple-system, system-ui';
-    ctx.fillText('Press Next Step. Nucleus accumbens + dopamine says “do that again.”', 460, 50);
-    ctx.restore();
+    drawSceneOverlay(ctx, {
+      stimEmoji: '🏆', stimLabel: 'Winning / dessert / praise', stimColor: '#fbbf24',
+      respEmoji: '✨', respLabel: 'Pleasure + motivation', respColor: '#ffd166',
+      modality: 'VISION (reward cue)', modalityColor: C.accumbens,
+      instruction: 'Press Next Step. Nucleus accumbens + dopamine says “do that again.”',
+    });
   },
   isInteractive: true,
   controlsHTML: STEP_CONTROLS_HTML,
@@ -3321,9 +3199,9 @@ const sceneReward = {
   bindControls() { bindStepControls(); }
 };
 
-// =====================================================
-//  SCENE 10: Reward Hijacking / Addiction Case Study
-// =====================================================
+// ----------------------------------------------------------------------------
+// SCENE 10: Reward Hijacking / Addiction Case Study
+// ----------------------------------------------------------------------------
 const sceneHijack = {
   phase: 'Step 8: Reward Hijacking (Addiction Case Study)',
   phaseColor: '#f472b6',
@@ -3384,9 +3262,9 @@ const sceneHijack = {
   }
 };
 
-// =====================================================
-//  SCENE 11: Scenario Lab — all 12 scenarios
-// =====================================================
+// ----------------------------------------------------------------------------
+// SCENE 11: Scenario Lab — all 12 scenarios
+// ----------------------------------------------------------------------------
 const SCENARIOS = [
   { id: 'stove', emoji: '🔥', label: 'Hot stove', stim: 'Touch a hot stove', resp: 'Hand pulls back, pain after', nodes: ['skin','spinal','motorNeuron','muscle'], extra: ['skin','spinal','thalamus','parietal','frontal'], extraLabel: 'pain registers',
     key: "Heat <span class='arrow'>→</span> Skin receptors <span class='arrow'>→</span> Sensory neuron <span class='arrow'>→</span> Spinal cord (reflex arc) <span class='arrow'>→</span> Motor neuron <span class='arrow'>→</span> Muscles pull hand away. Pain signal continues: Spinal <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Parietal lobe <span class='arrow'>→</span> Frontal lobe. The spinal cord creates the first response before conscious awareness.",
@@ -3526,9 +3404,9 @@ function updatePathwayKey() {
   }
 }
 
-// =====================================================
-//  SCENE 12: Challenge Mode — build a pathway
-// =====================================================
+// ----------------------------------------------------------------------------
+// SCENE 12: Challenge Mode — build a pathway
+// ----------------------------------------------------------------------------
 const CHALLENGES = [
   { id: 'c1', label: 'Touch a hot stove', emoji: '🔥', stim: 'Touch hot stove', resp: 'Hand pulls back',
     correct: ['skin','spinal','motorNeuron','muscle'],
@@ -3789,9 +3667,9 @@ function arrEq(a, b) {
   return true;
 }
 
-// =====================================================
-//  SCENE 13: Reflect & Synthesize
-// =====================================================
+// ----------------------------------------------------------------------------
+// SCENE 13: Reflect & Synthesize
+// ----------------------------------------------------------------------------
 const sceneReflect = {
   phase: 'Step 13: Reflect & Synthesize',
   phaseColor: '#c7d2fe',
@@ -3846,12 +3724,10 @@ const sceneReflect = {
   }
 };
 
-// =====================================================
-//  Scene list — in scaffolded teaching order:
-//  Intro → Brain Map → Standard → Reflex → Fear → Memory →
-//  Reward → Hijacking → Motor → Vision → Scenario Lab →
-//  Challenge → Reflect
-// =====================================================
+// Scene list — in scaffolded teaching order:
+// Intro → Brain Map → Standard → Reflex → Fear → Memory →
+// Reward → Hijacking → Motor → Vision → Scenario Lab →
+// Challenge → Reflect.
 const scenes = [
   sceneIntro,
   sceneBrainMap,
@@ -3868,9 +3744,10 @@ const scenes = [
   sceneReflect,
 ];
 
-// =====================================================
-//  UI wiring
-// =====================================================
+// ============================================================================
+// UI WIRING
+// ============================================================================
+
 const phaseNameEl = document.getElementById('phaseName');
 const notesEl = document.getElementById('notes');
 const stepHeadingEl = document.getElementById('stepHeading');
@@ -3951,9 +3828,10 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowLeft' && currentSceneIdx > 0) setScene(currentSceneIdx - 1);
 });
 
-// =====================================================
-//  Main loop
-// =====================================================
+// ============================================================================
+// MAIN LOOP
+// ============================================================================
+
 let lastTs = null;
 function tick(ts) {
   if (lastTs == null) lastTs = ts;
