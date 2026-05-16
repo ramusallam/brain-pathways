@@ -310,7 +310,7 @@
 <body>
 <header>
   <div class="title">Brain Pathways: From Stimulus to Response</div>
-  <div class="step-indicator" id="stepIndicator">01 / 12</div>
+  <div class="step-indicator" id="stepIndicator">01 / 13</div>
 </header>
 
 <main>
@@ -452,7 +452,7 @@ const OUTPUTS = {
   spinal:      { x: 1200, y: 545, r: 22, label: 'Spinal Cord', color: C.spinal },
   motorNeuron: { x: 1330, y: 480, r: 18, label: 'Motor Neuron', color: C.motorNeuron },
   muscle:      { x: 1470, y: 365, r: 40, label: 'Muscle', color: C.muscle },
-  gland:       { x: 1470, y: 490, r: 26, label: 'Gland', color: C.gland },
+  gland:       { x: 1470, y: 490, r: 32, label: 'Adrenal Gland', color: C.gland },
 };
 
 // =====================================================
@@ -847,77 +847,81 @@ function drawBasalGanglia(ctx, activation, t) {
 }
 
 // =====================================================
-//  Cerebellum — characteristic foliate folded structure
+//  Cerebellum — anatomical lateral view with dense folia
 // =====================================================
 function drawCerebellum(ctx, activation, t) {
   const r = REGIONS.cerebellum;
   ctx.save();
   // Halo when active
   if (activation > 0.05) {
-    const halo = ctx.createRadialGradient(r.x, r.y, 0, r.x, r.y, 90);
-    halo.addColorStop(0, rgba(r.color, 0.30 * activation));
+    const halo = ctx.createRadialGradient(r.x, r.y, 0, r.x, r.y, 95);
+    halo.addColorStop(0, rgba(r.color, 0.25 * activation));
     halo.addColorStop(1, rgba(r.color, 0));
     ctx.fillStyle = halo;
     ctx.beginPath();
-    ctx.arc(r.x, r.y, 90, 0, Math.PI * 2);
+    ctx.arc(r.x, r.y, 95, 0, Math.PI * 2);
     ctx.fill();
   }
-  // Body — egg shape, tilted slightly
-  const grad = ctx.createRadialGradient(r.x - 18, r.y - 16, 0, r.x, r.y, 62);
-  grad.addColorStop(0, '#f0c4bb');
-  grad.addColorStop(0.55, '#c8867b');
-  grad.addColorStop(1, '#7a3e30');
+  // Body — slightly oval, sized to match real cerebellum proportions in sagittal view
+  // Use clipping so folia stay inside the body
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(r.x, r.y, 56, 44, 0.04, 0, Math.PI * 2);
+  ctx.clip();
+  // Base gradient — pink-tan like cerebrum but slightly darker
+  const grad = ctx.createLinearGradient(r.x, r.y - 50, r.x, r.y + 50);
+  grad.addColorStop(0, '#dfa898');
+  grad.addColorStop(0.4, '#c08a7a');
+  grad.addColorStop(1, '#7a4a3c');
   ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.ellipse(r.x, r.y, 56, 42, 0.05, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(95, 50, 38, 0.7)';
-  ctx.lineWidth = 1.6;
-  ctx.stroke();
-  // Vermis ridge (central vertical line)
-  ctx.strokeStyle = 'rgba(95, 50, 38, 0.45)';
-  ctx.lineWidth = 1.2;
-  ctx.beginPath();
-  ctx.moveTo(r.x - 4, r.y - 38);
-  ctx.bezierCurveTo(r.x - 2, r.y - 10, r.x - 2, r.y + 10, r.x - 4, r.y + 38);
-  ctx.stroke();
-  // Foliate folds (classic horizontal cerebellar striations)
-  ctx.strokeStyle = 'rgba(95, 50, 38, 0.7)';
-  ctx.lineWidth = 1.3;
-  const folds = [
-    { y: -34, w: 28 },
-    { y: -25, w: 38 },
-    { y: -15, w: 45 },
-    { y: -5, w: 50 },
-    { y: 5, w: 52 },
-    { y: 15, w: 48 },
-    { y: 25, w: 40 },
-    { y: 33, w: 28 },
-  ];
-  folds.forEach(f => {
+  ctx.fillRect(r.x - 70, r.y - 60, 140, 120);
+  // Dense parallel folia — many thin curved lines, characteristic of cerebellum
+  // Slight downward curve (matches the medical-textbook foliate pattern)
+  ctx.strokeStyle = 'rgba(80, 40, 30, 0.55)';
+  ctx.lineWidth = 0.9;
+  for (let i = -20; i <= 20; i++) {
+    const yy = r.y + i * 2.6;
+    // Each fold gently curves
     ctx.beginPath();
-    ctx.moveTo(r.x - f.w, r.y + f.y);
-    ctx.quadraticCurveTo(r.x, r.y + f.y - 3, r.x + f.w, r.y + f.y);
+    ctx.moveTo(r.x - 60, yy);
+    ctx.quadraticCurveTo(r.x, yy + 1.5, r.x + 60, yy);
     ctx.stroke();
-  });
-  // Subtle outer-edge glow highlight on top-left
-  ctx.strokeStyle = 'rgba(255, 220, 205, 0.35)';
-  ctx.lineWidth = 1.4;
-  ctx.beginPath();
-  ctx.ellipse(r.x - 4, r.y - 4, 48, 36, 0.05, Math.PI * 0.95, Math.PI * 1.65);
-  ctx.stroke();
-  // Activation color overlay
-  if (activation > 0.05) {
-    ctx.fillStyle = rgba(r.color, 0.22 * activation);
+  }
+  // Slightly darker "interlobular" shadow lines every 5th fold for depth
+  ctx.strokeStyle = 'rgba(60, 28, 22, 0.7)';
+  ctx.lineWidth = 1.2;
+  for (let i = -16; i <= 16; i += 4) {
+    const yy = r.y + i * 2.6;
     ctx.beginPath();
-    ctx.ellipse(r.x, r.y, 56, 42, 0.05, 0, Math.PI * 2);
-    ctx.fill();
-    // pulse ring
+    ctx.moveTo(r.x - 60, yy);
+    ctx.quadraticCurveTo(r.x, yy + 1.5, r.x + 60, yy);
+    ctx.stroke();
+  }
+  // Activation color tint
+  if (activation > 0.05) {
+    ctx.fillStyle = rgba(r.color, 0.18 * activation);
+    ctx.fillRect(r.x - 70, r.y - 60, 140, 120);
+  }
+  ctx.restore();
+  // Outer rim outline
+  ctx.strokeStyle = 'rgba(85, 42, 32, 0.75)';
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.ellipse(r.x, r.y, 56, 44, 0.04, 0, Math.PI * 2);
+  ctx.stroke();
+  // Subtle top-left highlight (anatomical sheen)
+  ctx.strokeStyle = 'rgba(255, 220, 205, 0.28)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.ellipse(r.x - 4, r.y - 6, 50, 38, 0.04, Math.PI * 1.0, Math.PI * 1.6);
+  ctx.stroke();
+  // Activation pulse ring
+  if (activation > 0.1) {
     const phase = ((t || 0) / 600 + r.x * 0.005) % 1;
-    ctx.strokeStyle = rgba(r.color, (1 - phase) * 0.5 * activation);
+    ctx.strokeStyle = rgba(r.color, (1 - phase) * 0.45 * activation);
     ctx.lineWidth = 1.8;
     ctx.beginPath();
-    ctx.ellipse(r.x, r.y, 56 + phase * 16, 42 + phase * 12, 0.05, 0, Math.PI * 2);
+    ctx.ellipse(r.x, r.y, 56 + phase * 14, 44 + phase * 11, 0.04, 0, Math.PI * 2);
     ctx.stroke();
   }
   ctx.restore();
@@ -1505,58 +1509,79 @@ function drawGland(ctx, opts = {}) {
   const cx = n.x, cy = n.y;
   ctx.save();
   if (active > 0.05) {
-    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, 55);
-    halo.addColorStop(0, rgba(n.color, 0.4 * active));
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, 60);
+    halo.addColorStop(0, rgba(n.color, 0.35 * active));
     halo.addColorStop(1, rgba(n.color, 0));
     ctx.fillStyle = halo;
-    ctx.beginPath(); ctx.arc(cx, cy, 55, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, cy, 60, 0, Math.PI * 2); ctx.fill();
   }
-  // Adrenal gland — triangular cap shape
-  const fill = ctx.createRadialGradient(cx - 5, cy - 8, 0, cx, cy, 28);
-  fill.addColorStop(0, '#fed7aa');
-  fill.addColorStop(0.5, '#fb923c');
-  fill.addColorStop(1, '#7c2d12');
-  ctx.fillStyle = fill;
+  // Kidney behind (anatomical context — adrenals sit on top of kidneys)
+  const kidneyFill = ctx.createRadialGradient(cx - 4, cy + 10, 0, cx, cy + 14, 34);
+  kidneyFill.addColorStop(0, '#b08070');
+  kidneyFill.addColorStop(0.6, '#8a4f3e');
+  kidneyFill.addColorStop(1, '#4a2218');
+  ctx.fillStyle = kidneyFill;
   ctx.beginPath();
-  ctx.moveTo(cx, cy - 22);
-  ctx.bezierCurveTo(cx + 18, cy - 18, cx + 24, cy + 4, cx + 18, cy + 18);
-  ctx.bezierCurveTo(cx + 6, cy + 22, cx - 8, cy + 22, cx - 18, cy + 18);
-  ctx.bezierCurveTo(cx - 24, cy + 4, cx - 18, cy - 18, cx, cy - 22);
+  // kidney bean shape (medial concavity facing left)
+  ctx.moveTo(cx + 22, cy + 4);
+  ctx.bezierCurveTo(cx + 28, cy + 22, cx + 14, cy + 32, cx, cy + 32);
+  ctx.bezierCurveTo(cx - 12, cy + 32, cx - 26, cy + 22, cx - 22, cy + 6);
+  // medial indent
+  ctx.bezierCurveTo(cx - 18, cy + 0, cx - 8, cy + 4, cx, cy + 6);
+  ctx.bezierCurveTo(cx + 8, cy + 4, cx + 18, cy + 0, cx + 22, cy + 4);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = 'rgba(110, 40, 12, 0.65)';
-  ctx.lineWidth = 1.4;
+  ctx.strokeStyle = 'rgba(60, 25, 18, 0.65)';
+  ctx.lineWidth = 1.3;
   ctx.stroke();
-  // Cortex/medulla texture lines
-  ctx.strokeStyle = 'rgba(110, 40, 12, 0.45)';
-  ctx.lineWidth = 1;
+  // Adrenal gland cap (sitting on top of kidney)
+  const adrenalFill = ctx.createRadialGradient(cx - 4, cy - 10, 0, cx, cy - 6, 18);
+  adrenalFill.addColorStop(0, '#fed7aa');
+  adrenalFill.addColorStop(0.55, '#fb923c');
+  adrenalFill.addColorStop(1, '#7c2d12');
+  ctx.fillStyle = adrenalFill;
+  // triangular cap, lying horizontally on top of the kidney
   ctx.beginPath();
-  ctx.moveTo(cx - 12, cy - 4);
-  ctx.bezierCurveTo(cx - 4, cy + 1, cx + 4, cy + 1, cx + 12, cy - 4);
+  ctx.moveTo(cx - 20, cy - 6);
+  ctx.bezierCurveTo(cx - 14, cy - 18, cx, cy - 20, cx + 8, cy - 16);
+  ctx.bezierCurveTo(cx + 18, cy - 12, cx + 22, cy - 6, cx + 22, cy - 2);
+  ctx.bezierCurveTo(cx + 12, cy + 4, cx - 6, cy + 4, cx - 20, cy - 2);
+  ctx.bezierCurveTo(cx - 22, cy - 4, cx - 22, cy - 6, cx - 20, cy - 6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(110, 40, 12, 0.7)';
+  ctx.lineWidth = 1.3;
   ctx.stroke();
+  // Inner cortex/medulla suggestion
+  ctx.strokeStyle = 'rgba(110, 40, 12, 0.4)';
+  ctx.lineWidth = 0.9;
   ctx.beginPath();
-  ctx.moveTo(cx - 14, cy - 12);
-  ctx.bezierCurveTo(cx - 4, cy - 8, cx + 4, cy - 8, cx + 14, cy - 12);
+  ctx.moveTo(cx - 14, cy - 9);
+  ctx.bezierCurveTo(cx - 4, cy - 12, cx + 6, cy - 12, cx + 16, cy - 8);
   ctx.stroke();
-  // Hormone particles emitted when active
+  // Hormone particles when active (adrenaline release)
   if (active > 0.1) {
     for (let i = 0; i < 7; i++) {
       const ph = ((t || 0) / 600 + i * 0.14) % 1;
-      const a2 = (1 - ph) * 0.7 * active;
-      const ang = i * 0.9;
-      const px = cx + Math.cos(ang) * (24 + ph * 22);
-      const py = cy + Math.sin(ang) * (22 + ph * 18);
+      const a2 = (1 - ph) * 0.65 * active;
+      const ang = -Math.PI * 0.6 + i * 0.25;
+      const px = cx + Math.cos(ang) * (22 + ph * 22);
+      const py = cy - 6 + Math.sin(ang) * (16 + ph * 14);
       ctx.fillStyle = rgba(n.color, a2);
       ctx.beginPath();
-      ctx.arc(px, py, 2.6, 0, Math.PI * 2);
+      ctx.arc(px, py, 2.4, 0, Math.PI * 2);
       ctx.fill();
     }
   }
+  // Label
   ctx.fillStyle = rgba(n.color, 0.95);
   ctx.font = '600 12px -apple-system, system-ui';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('Gland', cx, cy + 40);
+  ctx.fillText('Adrenal Gland', cx, cy + 50);
+  ctx.fillStyle = 'rgba(160, 160, 160, 0.7)';
+  ctx.font = '500 10px -apple-system, system-ui';
+  ctx.fillText('(on the kidney)', cx, cy + 64);
   ctx.restore();
 }
 
@@ -1697,8 +1722,8 @@ function drawPathwaySegment(ctx, fromKey, toKey, opts = {}) {
   const dim = opts.dim || 0;
   const color = opts.color || '#c7d2fe';
   const curveAmt = opts.curve != null ? opts.curve : 0.18;
-  const baseAlpha = active > 0.05 ? 0.55 + active * 0.35 : (0.16 - dim * 0.08);
-  const width = 2 + active * 4;
+  const baseAlpha = active > 0.05 ? 0.75 + active * 0.20 : (0.18 - dim * 0.08);
+  const width = 2.5 + active * 4.5;
 
   // Compute control point for a gentle curve
   const dx = b.x - a.x;
@@ -1709,8 +1734,18 @@ function drawPathwaySegment(ctx, fromKey, toKey, opts = {}) {
   ctx.save();
   // Soft glow stroke
   if (active > 0.05) {
-    ctx.strokeStyle = rgba(color, 0.18 * active);
-    ctx.lineWidth = width + 10;
+    ctx.strokeStyle = rgba(color, 0.25 * active);
+    ctx.lineWidth = width + 12;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.quadraticCurveTo(mx, my, b.x, b.y);
+    ctx.stroke();
+  }
+  // Dark outline for contrast against the brain
+  if (active > 0.05) {
+    ctx.strokeStyle = 'rgba(20, 14, 10, 0.55)';
+    ctx.lineWidth = width + 2;
     ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
@@ -1751,36 +1786,50 @@ function drawSignalPulse(ctx, fromKey, toKey, progress, opts = {}) {
   const my = (a.y + b.y) / 2 - dx * curveAmt;
   const t = clamp(progress, 0, 1);
 
-  // Trail
+  // Trail (longer, brighter for visibility through the brain)
   ctx.save();
-  for (let i = 8; i >= 1; i--) {
-    const tt = t - i * 0.025;
+  for (let i = 12; i >= 1; i--) {
+    const tt = t - i * 0.022;
     if (tt < 0) continue;
     const p = quadPoint(a, mx, my, b, tt);
-    const alpha = (1 - i / 8) * 0.35;
-    const rad = 5 + (1 - i / 8) * 6;
-    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rad * 2.5);
+    const alpha = ((12 - i) / 12) ** 1.5 * 0.45;
+    const rad = 6 + ((12 - i) / 12) * 8;
+    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rad * 2.6);
     g.addColorStop(0, rgba(color, alpha));
     g.addColorStop(1, rgba(color, 0));
     ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, rad * 2.5, 0, Math.PI * 2);
+    ctx.arc(p.x, p.y, rad * 2.6, 0, Math.PI * 2);
     ctx.fill();
   }
-  // Head
+  // Head — bigger, more luminous so it stays visible against the cortex
   const p = quadPoint(a, mx, my, b, t);
-  const headG = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 26);
-  headG.addColorStop(0, rgba('#ffffff', 0.95));
-  headG.addColorStop(0.25, rgba(color, 0.9));
+  const outerG = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 38);
+  outerG.addColorStop(0, rgba(color, 0.55));
+  outerG.addColorStop(0.5, rgba(color, 0.25));
+  outerG.addColorStop(1, rgba(color, 0));
+  ctx.fillStyle = outerG;
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, 38, 0, Math.PI * 2);
+  ctx.fill();
+  const headG = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 18);
+  headG.addColorStop(0, 'rgba(255,255,255,1)');
+  headG.addColorStop(0.35, rgba(color, 1));
   headG.addColorStop(1, rgba(color, 0));
   ctx.fillStyle = headG;
   ctx.beginPath();
-  ctx.arc(p.x, p.y, 26, 0, Math.PI * 2);
+  ctx.arc(p.x, p.y, 18, 0, Math.PI * 2);
   ctx.fill();
-  // Core
-  ctx.fillStyle = rgba('#ffffff', 0.95);
+  // Dark outline for contrast over the pink cortex
+  ctx.strokeStyle = 'rgba(30, 18, 12, 0.55)';
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+  ctx.arc(p.x, p.y, 6.5, 0, Math.PI * 2);
+  ctx.stroke();
+  // Bright white core
+  ctx.fillStyle = rgba('#ffffff', 0.98);
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, 5.5, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
   return p;
@@ -1877,6 +1926,74 @@ function drawBrainBase(ctx, opts = {}) {
 }
 
 // =====================================================
+//  Persistent label layouts — anchor outside the brain, with leader lines
+//  to the structure. Active regions get bolder labels.
+// =====================================================
+const LABEL_LAYOUTS = {
+  // Lobes — outside the cerebrum
+  frontal:      { lx: 345, ly: 170 },
+  motor:        { lx: 628, ly: 52 },
+  parietal:     { lx: 790, ly: 40 },
+  occipital:    { lx: 1115, ly: 195 },
+  temporal:     { lx: 540, ly: 525 },
+  // Deep structures — left column (some) and right column (others)
+  basalganglia: { lx: 345, ly: 220 },
+  thalamus:     { lx: 345, ly: 268 },
+  accumbens:    { lx: 345, ly: 315 },
+  hypothalamus: { lx: 345, ly: 358 },
+  amygdala:     { lx: 1115, ly: 360 },
+  hippocampus:  { lx: 1115, ly: 400 },
+  // Hindbrain
+  cerebellum:   { lx: 1115, ly: 460 },
+  brainstem:    { lx: 750, ly: 558 },
+};
+
+function drawPersistentLabel(ctx, text, lx, ly, tx, ty, color, isActive) {
+  ctx.save();
+  // Leader line — subtle when inactive, brighter when active
+  ctx.strokeStyle = rgba(color, isActive ? 0.7 : 0.30);
+  ctx.lineWidth = 1;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(lx, ly);
+  ctx.lineTo(tx, ty);
+  ctx.stroke();
+  // Anchor dot on the structure
+  ctx.fillStyle = rgba(color, isActive ? 0.95 : 0.50);
+  ctx.beginPath();
+  ctx.arc(tx, ty, 2.4, 0, Math.PI * 2);
+  ctx.fill();
+  // Label background pill
+  ctx.font = isActive ? '700 11px -apple-system, system-ui' : '600 10px -apple-system, system-ui';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const m = ctx.measureText(text);
+  const padX = 7, padY = 5;
+  const w = m.width + padX * 2;
+  const h = (isActive ? 11 : 10) + padY * 2;
+  const bx = lx - w / 2, by = ly - h / 2;
+  ctx.fillStyle = isActive ? 'rgba(20, 24, 38, 0.94)' : 'rgba(14, 18, 30, 0.78)';
+  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(bx, by, w, h, h / 2); ctx.fill(); }
+  ctx.strokeStyle = rgba(color, isActive ? 0.65 : 0.32);
+  ctx.lineWidth = 1;
+  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(bx, by, w, h, h / 2); ctx.stroke(); }
+  ctx.fillStyle = rgba(color, isActive ? 1 : 0.78);
+  ctx.fillText(text, lx, ly + 0.5);
+  ctx.restore();
+}
+
+function drawAllLabels(ctx, activationMap) {
+  activationMap = activationMap || {};
+  Object.keys(LABEL_LAYOUTS).forEach(key => {
+    const r = REGIONS[key];
+    const layout = LABEL_LAYOUTS[key];
+    if (!r || !layout) return;
+    const isActive = (activationMap[key] || 0) > 0.15;
+    drawPersistentLabel(ctx, r.label, layout.lx, layout.ly, r.x, r.y, r.color, isActive);
+  });
+}
+
+// =====================================================
 //  State
 // =====================================================
 let currentSceneIdx = 0;
@@ -1928,31 +2045,40 @@ const sceneIntro = {
   phase: 'Step 1: From Neuron to Brain Systems',
   phaseColor: '#ffd166',
   notes: "In the last two simulations you watched an <strong>action potential</strong> race down a single neuron and cross a single <strong>synapse</strong>. Now we zoom out. Those same signals are firing across <strong>billions of neurons</strong> at the same time, wiring entire brain regions together. The brain is an <strong>input-output machine</strong>: stimulus from the world arrives, travels through neural pathways, and produces a response back into the world.",
-  notebook: "Write the title <strong>Brain Pathways: From Stimulus to Response</strong>. Underneath, draw the chain: <strong>action potential → synapse → brain systems</strong>. You will keep adding to this diagram throughout the simulation.",
+  notebook: "Write the title <strong>Brain Pathways: From Stimulus to Response</strong>. Underneath, draw the chain: <strong>action potential → synapse → brain systems</strong>. Move through all three sub-phases (Neuron, Synapse, Brain) using the <strong>Next Phase →</strong> button before continuing.",
   setup() {
     clearField();
-    sceneLocal = { t: 0, zoom: 0, bolt: 0, sparkles: [] };
+    sceneLocal = { phaseIdx: 0, t: 0, bolt: 0, sparkles: [], fadeIn: 0 };
+  },
+  setPhase(i) {
+    sceneLocal.phaseIdx = clamp(i, 0, 2);
+    sceneLocal.t = 0;
+    sceneLocal.bolt = 0;
+    sceneLocal.fadeIn = 0;
+    if (typeof updateIntroControls === 'function') updateIntroControls();
   },
   update(dt) {
     sceneLocal.t += dt;
-    // Three-stage zoom: neuron view → synapse view → brain view → loop
-    const cycle = 6800;
-    const phase = (sceneLocal.t % cycle) / cycle;
-    sceneLocal.zoom = phase;
-    sceneLocal.bolt = (phase < 0.33) ? (phase / 0.33) : 1;
+    sceneLocal.fadeIn = Math.min(1, sceneLocal.fadeIn + dt / 500);
+    if (sceneLocal.phaseIdx === 0) {
+      sceneLocal.bolt = (sceneLocal.t / 2400) % 1;
+    } else {
+      sceneLocal.bolt = 1;
+    }
     // Sparkles
     sceneLocal.sparkles = sceneLocal.sparkles.filter(s => s.life > 0);
     sceneLocal.sparkles.forEach(s => { s.life -= dt / 600; s.x += s.vx; s.y += s.vy; });
-    if (Math.random() < 0.18) {
+    if (Math.random() < 0.10) {
       sceneLocal.sparkles.push({ x: W/2 + (Math.random()-0.5)*W*0.6, y: H/2 + (Math.random()-0.5)*H*0.5, vx: (Math.random()-0.5)*0.4, vy: (Math.random()-0.5)*0.4, life: 1 });
     }
   },
   draw(ctx, t) {
-    const phase = sceneLocal.zoom;
+    const ph = sceneLocal.phaseIdx;
+    const fade = sceneLocal.fadeIn;
 
     // Background ambient sparkles
     sceneLocal.sparkles.forEach(s => {
-      const a = s.life * 0.35;
+      const a = s.life * 0.30;
       const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, 18);
       g.addColorStop(0, `rgba(199, 210, 254, ${a})`);
       g.addColorStop(1, `rgba(99, 102, 241, 0)`);
@@ -1960,33 +2086,30 @@ const sceneIntro = {
       ctx.beginPath(); ctx.arc(s.x, s.y, 18, 0, Math.PI * 2); ctx.fill();
     });
 
-    // Three stages crossfade
-    if (phase < 0.33) {
-      // Stage 1: neuron with lightning
-      const fade = Math.min(1, phase * 4);
+    if (ph === 0) {
+      // Phase 1: neuron with lightning
       ctx.save();
       ctx.globalAlpha = fade;
       drawConceptNeuron(ctx, 200, 320, 1100, 320, sceneLocal.bolt, t);
       ctx.restore();
       ctx.save();
+      ctx.globalAlpha = fade;
       ctx.font = '700 26px -apple-system, system-ui';
-      ctx.fillStyle = rgba('#ffd166', fade * 0.95);
+      ctx.fillStyle = '#ffd166';
       ctx.textAlign = 'center';
       ctx.fillText('A signal races down one neuron', W/2, 110);
       ctx.font = '400 16px -apple-system, system-ui';
-      ctx.fillStyle = rgba('#a0a0a0', fade * 0.85);
-      ctx.fillText('action potential', W/2, 140);
+      ctx.fillStyle = '#a0a0a0';
+      ctx.fillText('action potential — review from the last app', W/2, 140);
       ctx.restore();
-    } else if (phase < 0.66) {
-      // Stage 2: synapse
-      const p2 = (phase - 0.33) / 0.33;
-      const fade = Math.min(1, p2 * 4) * (1 - Math.max(0, p2 - 0.85) * 6);
+    } else if (ph === 1) {
+      // Phase 2: synapse
       ctx.save();
-      ctx.globalAlpha = Math.max(0, Math.min(1, fade));
-      drawConceptSynapse(ctx, W/2, 340, p2, t);
+      ctx.globalAlpha = fade;
+      drawConceptSynapse(ctx, W/2, 340, Math.min(1, sceneLocal.t / 1500), t);
       ctx.restore();
       ctx.save();
-      ctx.globalAlpha = Math.max(0, Math.min(1, fade));
+      ctx.globalAlpha = fade;
       ctx.font = '700 26px -apple-system, system-ui';
       ctx.fillStyle = '#f472b6';
       ctx.textAlign = 'center';
@@ -1996,26 +2119,22 @@ const sceneIntro = {
       ctx.fillText('neurotransmitters bridge the gap', W/2, 140);
       ctx.restore();
     } else {
-      // Stage 3: full brain reveal
-      const p3 = (phase - 0.66) / 0.34;
-      const fade = Math.min(1, p3 * 3);
+      // Phase 3: full brain reveal
       ctx.save();
       ctx.globalAlpha = fade;
       drawBrainBase(ctx, { silhouetteAlpha: fade });
-      // Tease activation of multiple regions
-      const flicker = (Math.sin(t / 400) + 1) * 0.5;
       const activeKeys = ['frontal','motor','parietal','occipital','temporal','thalamus','amygdala','accumbens','cerebellum','brainstem','hippocampus','hypothalamus','basalganglia'];
       activeKeys.forEach((k, i) => {
         const phaseOffset = (Math.sin(t / 500 + i * 0.7) + 1) * 0.5;
-        drawRegion(ctx, k, { t, active: 0.3 + phaseOffset * 0.35 });
+        drawRegion(ctx, k, { t, active: 0.25 + phaseOffset * 0.30 });
       });
       Object.keys(INPUTS).forEach((k, i) => {
         const phaseOffset = (Math.sin(t / 600 + i) + 1) * 0.5;
-        drawInput(ctx, k, { t, active: 0.2 + phaseOffset * 0.3 });
+        drawInput(ctx, k, { t, active: 0.2 + phaseOffset * 0.30 });
       });
       Object.keys(OUTPUTS).forEach((k, i) => {
         const phaseOffset = (Math.sin(t / 700 + i + 2) + 1) * 0.5;
-        drawOutput(ctx, k, { t, active: 0.2 + phaseOffset * 0.3 });
+        drawOutput(ctx, k, { t, active: 0.2 + phaseOffset * 0.30 });
       });
       ctx.restore();
       ctx.save();
@@ -2029,8 +2148,28 @@ const sceneIntro = {
       ctx.fillText('stimulus enters, the brain processes, response leaves', W/2, 140);
       ctx.restore();
     }
+  },
+  isInteractive: true,
+  controlsHTML: `<button class="chip" id="introPrev">← Prev Phase</button><div class="sim-readout">Phase <strong id="introPhase">1 / 3</strong> <span id="introPhaseLabel" style="margin-left:6px;color:#a0a0a0">Neuron</span></div><button class="chip warm" id="introNext">Next Phase →</button>`,
+  bindControls() {
+    document.getElementById('introPrev').onclick = () => sceneIntro.setPhase(sceneLocal.phaseIdx - 1);
+    document.getElementById('introNext').onclick = () => sceneIntro.setPhase(sceneLocal.phaseIdx + 1);
+    updateIntroControls();
   }
 };
+
+function updateIntroControls() {
+  const el = document.getElementById('introPhase');
+  const lab = document.getElementById('introPhaseLabel');
+  const prev = document.getElementById('introPrev');
+  const next = document.getElementById('introNext');
+  if (!el) return;
+  const labels = ['Neuron', 'Synapse', 'Brain'];
+  el.textContent = `${sceneLocal.phaseIdx + 1} / 3`;
+  if (lab) lab.textContent = labels[sceneLocal.phaseIdx];
+  if (prev) prev.disabled = sceneLocal.phaseIdx === 0;
+  if (next) next.disabled = sceneLocal.phaseIdx === 2;
+}
 
 // =====================================================
 //  Concept neuron (simplified, for intro)
@@ -2179,8 +2318,8 @@ function drawConceptSynapse(ctx, cx, cy, progress, t) {
 const sceneBrainMap = {
   phase: 'Step 2: The Brain Map',
   phaseColor: '#c4b5fd',
-  notes: "Meet the major regions of the brain and the sensory systems that feed them. Each region has a job. The brain is not one piece doing one thing. It is many regions working in <strong>parallel</strong>. Information enters through <strong>sensory systems</strong>, gets routed through the <strong>thalamus</strong>, processed by the <strong>lobes</strong> and <strong>deep structures</strong>, and leaves through the <strong>brain stem and spinal cord</strong> as a response.",
-  notebook: "<strong>Click each region of the brain</strong> in the simulation. In your notes, list the major regions in three columns: <strong>Sensory Input | Brain Region | Output</strong>. For each brain region, write a one-sentence summary of what it does. You will use this map for every scenario coming up.",
+  notes: "Meet the major regions of the brain and the sensory systems that feed them. Each region has a job. Key processing assignments by lobe: <strong>occipital = vision, temporal = hearing + language + memory, parietal = touch + pain + spatial awareness, frontal = decision-making and planning</strong>. Deep structures handle specialized work: <strong>thalamus = sensory relay, amygdala = fear, hippocampus = memory, hypothalamus = body regulation, nucleus accumbens = reward, basal ganglia = action selection, cerebellum = balance, brain stem = survival</strong>.",
+  notebook: "<strong>Click every region and every sensory organ</strong> in the simulation. For each one, write a one-line summary in your notes. Then make a key matching each <strong>sensory modality</strong> to its processing lobe: <strong>vision → occipital, hearing → temporal, touch/pain → parietal, smell → limbic (hippocampus + amygdala, skips thalamus)</strong>. You will use this map for every scenario coming up.",
   setup() {
     clearField();
     sceneLocal = { hovered: null, selected: null, info: '' };
@@ -2375,7 +2514,8 @@ function getActivationMap(nodes, traceState) {
   return map;
 }
 
-// Draw all nodes (regions/inputs/outputs) with activation from a map
+// Draw all nodes (regions/inputs/outputs) with activation from a map.
+// Also draws persistent labels on every brain region.
 function drawAllNodes(ctx, t, activationMap, dimUnlit) {
   Object.keys(REGIONS).forEach(k => {
     const a = activationMap[k] || 0;
@@ -2389,35 +2529,51 @@ function drawAllNodes(ctx, t, activationMap, dimUnlit) {
     const a = activationMap[k] || 0;
     drawOutput(ctx, k, { t, active: a });
   });
+  // Persistent labels on every brain region — active ones get bolder
+  drawAllLabels(ctx, activationMap);
 }
 
 // =====================================================
 //  SCENE 3: The Universal Pathway
 // =====================================================
 const sceneUniversalPathway = {
-  phase: 'Step 3: The Universal Pathway',
+  phase: 'Step 3: The Standard Pathway',
   phaseColor: '#c7d2fe',
-  notes: "Every brain pathway follows the same overall shape: <strong>stimulus → sensor → relay → processing → decision → response</strong>. The world delivers a stimulus. A <strong>sensory organ</strong> detects it. The signal travels up to the <strong>thalamus</strong>, which acts as the brain's <strong>relay station</strong>. From there it routes to a <strong>processing lobe</strong>. The <strong>frontal lobe</strong> decides what to do, the <strong>motor cortex</strong> fires a command, and the signal heads down the <strong>spinal cord</strong> to a <strong>muscle or gland</strong> to produce the response.",
-  notebook: "Copy this <strong>universal pathway flow</strong> as a flowchart in your notes: <strong>Stimulus → Sensor → Thalamus (relay) → Cortex (process) → Frontal Lobe (decide) → Motor Cortex → Spinal Cord → Motor Neuron → Muscle</strong>. Highlight <strong>thalamus = relay station</strong> and <strong>frontal lobe = decision-maker</strong>.",
+  notes: "Every brain pathway follows the same overall shape: <strong>stimulus → sensor → thalamus (relay) → processing lobe → frontal lobe (decide) → response</strong>. The response leaves the brain through one of two routes. <strong>To a muscle</strong> (you move), or <strong>to a gland</strong> (you release a hormone). Use the buttons below to watch each ending.",
+  notebook: "Set up a tracker table in your notebook with these 4 columns: <strong>STIMULUS | SENSORY ORGAN | BRAIN REGIONS | RESPONSE</strong>. Leave room for at least 6 rows. We will add one row for every pathway in the next steps. For this scene, write the first row: <strong>Touch → Skin → Thalamus + Parietal + Frontal + Motor → Muscle (or Adrenal Gland)</strong>.",
+  pathwayKey: "Stimulus <span class='arrow'>→</span> Sensor <span class='arrow'>→</span> Thalamus (relay) <span class='arrow'>→</span> Cortex (process) <span class='arrow'>→</span> Frontal lobe (decide) <span class='arrow'>→</span> Motor cortex <span class='arrow'>→</span> Spinal cord <span class='arrow'>→</span> Motor neuron <span class='arrow'>→</span> Muscle &nbsp;|&nbsp; OR ending at: Hypothalamus <span class='arrow'>→</span> Adrenal gland",
   setup() {
     clearField();
-    sceneLocal = { nodes: ['skin', 'thalamus', 'parietal', 'frontal', 'motor', 'spinal', 'motorNeuron', 'muscle'] };
+    sceneLocal = {
+      mode: 'muscle',
+      muscleNodes: ['skin', 'thalamus', 'parietal', 'frontal', 'motor', 'spinal', 'motorNeuron', 'muscle'],
+      glandNodes: ['skin', 'thalamus', 'parietal', 'frontal', 'hypothalamus', 'gland']
+    };
   },
   update(dt) {},
   draw(ctx, t) {
     drawBrainBase(ctx, {});
-    const state = tracePathway(ctx, sceneLocal.nodes, t, { color: '#c7d2fe', speed: 0.00035 });
-    const map = getActivationMap(sceneLocal.nodes, state);
+    const nodes = sceneLocal.mode === 'gland' ? sceneLocal.glandNodes : sceneLocal.muscleNodes;
+    const color = sceneLocal.mode === 'gland' ? '#fb923c' : '#c7d2fe';
+    const state = tracePathway(ctx, nodes, t, { color, speed: 0.00035 });
+    const map = getActivationMap(nodes, state);
     drawAllNodes(ctx, t, map, true);
-    // Stage labels
     ctx.save();
     ctx.font = '700 13px -apple-system, system-ui';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#c7d2fe';
-    ctx.fillText('SENSORY INPUT', 150, 70);
-    ctx.fillText('PROCESSING', 740, 70);
-    ctx.fillText('OUTPUT / RESPONSE', 1380, 70);
+    ctx.fillText('SENSORY INPUT', 150, 22);
+    ctx.fillText('PROCESSING', 740, 22);
+    ctx.fillText('OUTPUT / RESPONSE', 1380, 22);
     ctx.restore();
+  },
+  isInteractive: true,
+  controlsHTML: `<button class="chip active" id="upMuscleBtn">→ Muscle (move)</button><button class="chip warm" id="upGlandBtn">→ Adrenal Gland (hormone)</button>`,
+  bindControls() {
+    const m = document.getElementById('upMuscleBtn');
+    const g = document.getElementById('upGlandBtn');
+    m.onclick = () => { sceneLocal.mode = 'muscle'; m.classList.add('active'); g.classList.remove('active'); };
+    g.onclick = () => { sceneLocal.mode = 'gland'; g.classList.add('active'); m.classList.remove('active'); };
   }
 };
 
@@ -2425,65 +2581,35 @@ const sceneUniversalPathway = {
 //  SCENE 4: The Reflex Arc
 // =====================================================
 const sceneReflex = {
-  phase: 'Step 4: The Reflex Arc',
+  phase: 'Step 4: The Reflex Arc (Touch + Pain Shortcut)',
   phaseColor: C.skin,
-  notes: "You touch a hot stove. Your hand pulls back <strong>BEFORE</strong> you feel pain. How? A <strong>reflex arc</strong>. Signals from the skin race up to the <strong>spinal cord</strong>, which fires an instant motor command back down to the muscle. The signal does not wait for the brain. <strong>The pain reaches your conscious brain a moment later</strong>, through the thalamus and parietal lobe. Reflexes are fast because they skip the long trip to the cortex.",
-  notebook: "Sketch the <strong>reflex arc</strong>: <strong>hot stove → skin → spinal cord → motor neuron → muscle (hand pulls back)</strong>. Then, in a different color, draw the <strong>delayed conscious path</strong>: <strong>skin → spinal cord → thalamus → parietal lobe → frontal lobe (you feel pain)</strong>. Star the spinal cord and write <strong>reflex shortcut</strong>.",
-  pathwayKey: "Heat <span class='arrow'>→</span> Skin <span class='arrow'>→</span> Spinal cord (REFLEX) <span class='arrow'>→</span> Motor neuron <span class='arrow'>→</span> Muscle pulls hand away &nbsp;|&nbsp; then Skin <span class='arrow'>→</span> Spinal cord <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Parietal lobe <span class='arrow'>→</span> Frontal lobe (you feel pain)",
+  notes: "Special case: a reflex arc <strong>skips the brain</strong>. You touch a hot stove. <strong>Pain and touch receptors in the skin</strong> send the signal up to the <strong>spinal cord</strong>, which fires an instant motor command BACK DOWN to the muscle. Your hand pulls away BEFORE the pain reaches conscious awareness. The pain signal still continues up to the brain: <strong>thalamus → parietal lobe</strong> (the parietal lobe is the brain's <strong>touch and pain processor</strong>), so you feel it a moment later. The protective movement has already happened. <strong>Reflexes save you because they skip the long trip to the cortex.</strong>",
+  notebook: "Add a row to your tracker table: <strong>STIMULUS</strong> = heat / pain, <strong>SENSORY MODALITY</strong> = touch + pain (skin receptors), <strong>BRAIN REGIONS</strong> = spinal cord only for the reflex; later <strong>thalamus → parietal lobe</strong> for conscious pain, <strong>RESPONSE</strong> = muscle pulls hand away. Write the rule: <strong>parietal lobe = touch and pain processing.</strong>",
+  pathwayKey: "Heat (pain) <span class='arrow'>→</span> Skin receptors <span class='arrow'>→</span> Spinal cord (REFLEX, skips brain) <span class='arrow'>→</span> Motor neuron <span class='arrow'>→</span> Muscle pulls hand away",
   setup() {
     clearField();
     sceneLocal = {
-      reflex: ['skin', 'spinal', 'motorNeuron', 'muscle'],
-      conscious: ['skin', 'spinal', 'thalamus', 'parietal', 'frontal'],
+      nodes: ['skin', 'spinal', 'motorNeuron', 'muscle'],
       t: 0
     };
   },
   update(dt) { sceneLocal.t += dt; },
   draw(ctx, t) {
     drawBrainBase(ctx, {});
-    // Cycle: reflex pulse fires first, then conscious pulse
-    const cycle = 4800;
-    const ct = sceneLocal.t % cycle;
-    const reflexT = ct < 1600 ? ct / 1600 : 1;
-    const consciousT = ct > 1200 ? (ct - 1200) / 3600 : 0;
-
-    // Reflex pathway (red/orange - urgent)
-    if (reflexT < 1) {
-      drawAnimatedSequence(ctx, sceneLocal.reflex, reflexT, '#ff6b6b', t);
-    } else {
-      sceneLocal.reflex.forEach((k, i) => {
-        if (i < sceneLocal.reflex.length - 1) drawPathwaySegment(ctx, k, sceneLocal.reflex[i+1], { color: '#ff6b6b', active: 0.4 });
-      });
-    }
-    // Conscious pathway (cyan - slower)
-    if (consciousT > 0 && consciousT < 1) {
-      drawAnimatedSequence(ctx, sceneLocal.conscious, consciousT, C.parietal, t);
-    } else if (consciousT >= 1) {
-      sceneLocal.conscious.forEach((k, i) => {
-        if (i < sceneLocal.conscious.length - 1) drawPathwaySegment(ctx, k, sceneLocal.conscious[i+1], { color: C.parietal, active: 0.4 });
-      });
-    }
-
-    // Build activation map
-    const map = {};
-    const reflexLit = Math.floor(reflexT * (sceneLocal.reflex.length - 1));
-    for (let i = 0; i <= reflexLit; i++) map[sceneLocal.reflex[i]] = 1;
-    const consciousLit = Math.floor(consciousT * (sceneLocal.conscious.length - 1));
-    for (let i = 0; i <= consciousLit; i++) map[sceneLocal.conscious[i]] = Math.max(map[sceneLocal.conscious[i]] || 0, 0.85);
+    const state = tracePathway(ctx, sceneLocal.nodes, t, { color: '#ff6b6b', speed: 0.00045 });
+    const map = getActivationMap(sceneLocal.nodes, state);
     drawAllNodes(ctx, t, map, true);
 
-    // Stimulus icon — hot stove
-    drawStimulusBadge(ctx, 90, 540, '🔥', 'Hot stove', '#ff6b6b');
-    // Response — hand pulls away
+    drawStimulusBadge(ctx, 90, 540, '🔥', 'Hot stove (pain)', '#ff6b6b');
     drawResponseBadge(ctx, 1490, 240, '✋', 'Hand pulls away', '#ff8fa3');
-    // Reflex label
     ctx.save();
     ctx.font = '700 14px -apple-system, system-ui';
     ctx.fillStyle = '#ff6b6b';
     ctx.textAlign = 'left';
-    ctx.fillText('FAST: reflex arc fires from spinal cord', 1120, 100);
-    ctx.fillStyle = C.parietal;
-    ctx.fillText('SLOWER: pain reaches conscious brain', 1120, 122);
+    ctx.fillText('Sensory modality: PAIN + TOUCH', 460, 30);
+    ctx.fillStyle = '#a0a0a0';
+    ctx.font = '400 12px -apple-system, system-ui';
+    ctx.fillText('The spinal cord fires the motor command directly — the brain is not involved in the reflex.', 460, 50);
     ctx.restore();
   }
 };
@@ -2565,48 +2691,35 @@ function drawResponseBadge(ctx, x, y, emoji, label, color) {
 //  SCENE 5: Fear Pathway
 // =====================================================
 const sceneFear = {
-  phase: 'Step 5: Fear Pathway',
+  phase: 'Step 5: Fear Pathway (Hearing)',
   phaseColor: C.amygdala,
-  notes: "A loud crash behind you. Your heart pounds, your body tenses, you spin around. That whole reaction is fast because the brain has a <strong>fear shortcut</strong>. The sound enters through the ears, hits the <strong>thalamus</strong>, and the thalamus sends a quick warning straight to the <strong>amygdala</strong> before any slow conscious processing finishes. The amygdala fires the <strong>hypothalamus</strong>, which activates the <strong>brain stem and adrenal glands</strong>: heart rate up, breathing up, body ready. The <strong>frontal lobe</strong> catches up a moment later and figures out what actually happened.",
-  notebook: "Sketch the <strong>fear pathway</strong>: <strong>ears → thalamus → amygdala → hypothalamus → brain stem + gland (adrenaline)</strong>. Add a second arrow showing the slower path: <strong>thalamus → temporal lobe → frontal lobe (conscious interpretation)</strong>. Write the phrase: <strong>amygdala = fear alarm</strong>.",
-  pathwayKey: "Loud crash <span class='arrow'>→</span> Ear <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Amygdala (fear alarm) <span class='arrow'>→</span> Hypothalamus <span class='arrow'>→</span> Brain stem &amp; gland (adrenaline) <span class='arrow'>→</span> Heart races, body tenses",
+  notes: "A loud crash behind you. Your heart pounds, your body tenses. The brain has a <strong>fear shortcut</strong>. The sound (<strong>auditory information</strong>) enters through the ear, hits the <strong>thalamus</strong>, and the thalamus sends a fast warning straight to the <strong>amygdala</strong> — the brain's <strong>fear alarm</strong>. The amygdala fires the <strong>hypothalamus</strong>, which activates the <strong>adrenal gland</strong> to release adrenaline. Heart rate up, breathing up, body ready. The <strong>temporal lobe</strong> (hearing + language) catches up a moment later so you can identify what you heard.",
+  notebook: "Add a row to your tracker: <strong>STIMULUS</strong> = loud crash, <strong>SENSORY MODALITY</strong> = hearing (ear), <strong>BRAIN REGIONS</strong> = thalamus → amygdala → hypothalamus, <strong>RESPONSE</strong> = adrenal gland releases adrenaline, heart races. Write the rules: <strong>amygdala = fear alarm. Temporal lobe = hearing.</strong>",
+  pathwayKey: "Loud crash <span class='arrow'>→</span> Ear (hearing) <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Amygdala (fear alarm) <span class='arrow'>→</span> Hypothalamus <span class='arrow'>→</span> Adrenal gland (adrenaline) <span class='arrow'>→</span> Heart races, body tenses",
   setup() {
     clearField();
     sceneLocal = {
-      fast: ['ear', 'thalamus', 'amygdala', 'hypothalamus', 'brainstem', 'gland'],
-      slow: ['ear', 'thalamus', 'temporal', 'frontal'],
+      nodes: ['ear', 'thalamus', 'amygdala', 'hypothalamus', 'gland'],
       t: 0
     };
   },
   update(dt) { sceneLocal.t += dt; },
   draw(ctx, t) {
     drawBrainBase(ctx, {});
-    const cycle = 4200;
-    const ct = sceneLocal.t % cycle;
-    const fastT = ct < 1800 ? ct / 1800 : 1;
-    const slowT = ct > 800 ? Math.min(1, (ct - 800) / 3000) : 0;
-
-    // fast pathway (amygdala route)
-    drawAnimatedSequence(ctx, sceneLocal.fast, fastT, '#f87171', t);
-    // slow conscious
-    if (slowT > 0) drawAnimatedSequence(ctx, sceneLocal.slow, slowT, '#c7d2fe', t);
-
-    const map = {};
-    const fastLit = Math.floor(fastT * (sceneLocal.fast.length - 1));
-    for (let i = 0; i <= fastLit; i++) map[sceneLocal.fast[i]] = 1;
-    const slowLit = Math.floor(slowT * (sceneLocal.slow.length - 1));
-    for (let i = 0; i <= slowLit; i++) map[sceneLocal.slow[i]] = Math.max(map[sceneLocal.slow[i]] || 0, 0.7);
+    const state = tracePathway(ctx, sceneLocal.nodes, t, { color: '#f87171', speed: 0.00045 });
+    const map = getActivationMap(sceneLocal.nodes, state);
     drawAllNodes(ctx, t, map, true);
 
-    drawStimulusBadge(ctx, 90, 540, '💥', 'Loud crash', '#f87171');
+    drawStimulusBadge(ctx, 90, 540, '💥', 'Loud crash (sound)', '#f87171');
     drawResponseBadge(ctx, 1490, 240, '💓', 'Heart races + body tenses', '#fb923c');
     ctx.save();
     ctx.font = '700 14px -apple-system, system-ui';
     ctx.fillStyle = '#f87171';
     ctx.textAlign = 'left';
-    ctx.fillText('FAST: amygdala fear shortcut', 1120, 100);
-    ctx.fillStyle = '#c7d2fe';
-    ctx.fillText('SLOWER: cortex figures out what happened', 1120, 122);
+    ctx.fillText('Sensory modality: HEARING', 460, 30);
+    ctx.fillStyle = '#a0a0a0';
+    ctx.font = '400 12px -apple-system, system-ui';
+    ctx.fillText('Amygdala fires the hypothalamus, which alarms the body through the adrenal gland.', 460, 50);
     ctx.restore();
   }
 };
@@ -2615,46 +2728,35 @@ const sceneFear = {
 //  SCENE 6: Smell + Memory
 // =====================================================
 const sceneSmellMemory = {
-  phase: 'Step 6: Smell + Memory',
+  phase: 'Step 6: Memory Pathway (Smell)',
   phaseColor: C.nose,
-  notes: "You smell cookies baking. Suddenly you remember your grandma's kitchen. Why is smell so emotional? <strong>Smell is the only sense that does NOT route through the thalamus first</strong>. Smell receptors in the nose project almost directly into the <strong>limbic system</strong>: the <strong>amygdala</strong> (emotion) and <strong>hippocampus</strong> (memory). That direct connection is why smell can trigger powerful memories and feelings instantly, before you can name what you smelled.",
-  notebook: "Sketch the <strong>smell pathway</strong>: <strong>nose → amygdala + hippocampus → temporal lobe → frontal lobe</strong>. Put a star next to it and write <strong>smell skips the thalamus</strong>. Then list one smell that triggers a strong memory for you and what it reminds you of.",
-  pathwayKey: "Smell <span class='arrow'>→</span> Nose <span class='arrow'>→</span> Amygdala (emotion) + Hippocampus (memory) <span class='arrow'>→</span> Temporal lobe <span class='arrow'>→</span> Frontal lobe (you name the memory)",
+  notes: "You smell cookies. Suddenly you remember your grandma's kitchen. Why is smell so emotional? <strong>Smell is the only sense that does NOT route through the thalamus first.</strong> Smell receptors in the nose project almost directly into the <strong>limbic system</strong>: the <strong>hippocampus</strong> (memory formation and retrieval) and the <strong>amygdala</strong> (emotion). That direct connection is why a smell can trigger a powerful memory before you can even name what you smelled. The <strong>temporal lobe</strong> (which houses hearing, language, and memory storage) then helps you put words to the memory.",
+  notebook: "Add a row to your tracker: <strong>STIMULUS</strong> = smell of cookies, <strong>SENSORY MODALITY</strong> = smell / olfactory (nose), <strong>BRAIN REGIONS</strong> = hippocampus → temporal lobe → frontal lobe (skips thalamus), <strong>RESPONSE</strong> = recall a memory. Star this row and write: <strong>smell skips the thalamus. Hippocampus = memory.</strong>",
+  pathwayKey: "Smell <span class='arrow'>→</span> Nose <span class='arrow'>→</span> Hippocampus (memory) <span class='arrow'>→</span> Temporal lobe <span class='arrow'>→</span> Frontal lobe (you recognize the memory). Smell is special — it skips the thalamus.",
   setup() {
     clearField();
     sceneLocal = {
-      emotion: ['nose', 'amygdala'],
-      memory: ['nose', 'hippocampus', 'temporal', 'frontal'],
+      nodes: ['nose', 'hippocampus', 'temporal', 'frontal'],
       t: 0
     };
   },
   update(dt) { sceneLocal.t += dt; },
   draw(ctx, t) {
     drawBrainBase(ctx, {});
-    const cycle = 4000;
-    const ct = sceneLocal.t % cycle;
-    const eT = ct < 1200 ? ct / 1200 : 1;
-    const mT = ct > 600 ? Math.min(1, (ct - 600) / 3000) : 0;
-
-    drawAnimatedSequence(ctx, sceneLocal.emotion, eT, '#f87171', t);
-    if (mT > 0) drawAnimatedSequence(ctx, sceneLocal.memory, mT, '#ffd166', t);
-
-    const map = {};
-    const eLit = Math.floor(eT * (sceneLocal.emotion.length - 1));
-    for (let i = 0; i <= eLit; i++) map[sceneLocal.emotion[i]] = 1;
-    const mLit = Math.floor(mT * (sceneLocal.memory.length - 1));
-    for (let i = 0; i <= mLit; i++) map[sceneLocal.memory[i]] = Math.max(map[sceneLocal.memory[i]] || 0, 0.85);
+    const state = tracePathway(ctx, sceneLocal.nodes, t, { color: '#ffd166', speed: 0.00040 });
+    const map = getActivationMap(sceneLocal.nodes, state);
     drawAllNodes(ctx, t, map, true);
 
     drawStimulusBadge(ctx, 90, 540, '🍪', 'Smell of cookies', '#f472b6');
-    drawResponseBadge(ctx, 1490, 240, '💭', 'Emotional memory', '#ffd166');
+    drawResponseBadge(ctx, 1490, 240, '💭', 'A memory returns', '#ffd166');
     ctx.save();
     ctx.font = '700 14px -apple-system, system-ui';
     ctx.fillStyle = C.nose;
     ctx.textAlign = 'left';
-    ctx.fillText('Smell skips the thalamus', 1120, 100);
-    ctx.fillStyle = C.hippocampus;
-    ctx.fillText('Goes straight to amygdala + hippocampus', 1120, 122);
+    ctx.fillText('Sensory modality: SMELL (olfactory)', 460, 30);
+    ctx.fillStyle = '#a0a0a0';
+    ctx.font = '400 12px -apple-system, system-ui';
+    ctx.fillText('Smell skips the thalamus and goes straight to the hippocampus (memory).', 460, 50);
     ctx.restore();
   }
 };
@@ -2663,11 +2765,11 @@ const sceneSmellMemory = {
 //  SCENE 7: Movement Pathway (riding a bike)
 // =====================================================
 const sceneMovement = {
-  phase: 'Step 7: Movement + Coordination',
+  phase: 'Step 9: Motor Coordination (Movement + Balance)',
   phaseColor: C.cerebellum,
-  notes: "You ride a bike without thinking about it. Three systems coordinate every movement: the <strong>motor cortex</strong> sends commands, the <strong>basal ganglia</strong> select and chain learned actions, and the <strong>cerebellum</strong> fine-tunes balance, timing, and precision. The signal then leaves through the <strong>spinal cord</strong> to the <strong>motor neurons</strong> and on to the <strong>muscles</strong>. Sensory feedback flows back in continuously, telling the cerebellum how to adjust.",
-  notebook: "Draw the <strong>movement pathway</strong>: <strong>frontal lobe (intent) → basal ganglia (action selection) → motor cortex (command) → cerebellum (coordination) → spinal cord → motor neuron → muscle</strong>. Star the cerebellum and write <strong>balance + timing</strong>. Add a feedback arrow from muscle back to cerebellum.",
-  pathwayKey: "Decide to ride <span class='arrow'>→</span> Frontal <span class='arrow'>→</span> Basal ganglia <span class='arrow'>→</span> Motor cortex <span class='arrow'>→</span> Cerebellum (fine-tune) <span class='arrow'>→</span> Spinal cord <span class='arrow'>→</span> Motor neuron <span class='arrow'>→</span> Muscle (pedal + balance)",
+  notes: "You ride a bike without thinking. Three systems coordinate every movement. The <strong>motor cortex</strong> sends commands, the <strong>basal ganglia</strong> select and chain learned movement patterns, and the <strong>cerebellum</strong> fine-tunes <strong>balance, timing, and precision</strong> using continuous feedback from the body. The signal leaves through the <strong>spinal cord</strong> to the <strong>motor neurons</strong> and on to the <strong>muscles</strong>. The cerebellum gets <strong>proprioceptive feedback</strong> (where your body is in space) so it can adjust on the fly.",
+  notebook: "Add a row: <strong>STIMULUS</strong> = decide to ride a bike, <strong>SENSORY MODALITY</strong> = proprioception + balance (body position and motion), <strong>BRAIN REGIONS</strong> = frontal lobe → basal ganglia → motor cortex → cerebellum, <strong>RESPONSE</strong> = muscles pedal + balance. Write the rules: <strong>cerebellum = balance and timing. Basal ganglia = action selection. Motor cortex = movement command.</strong>",
+  pathwayKey: "Decide to ride <span class='arrow'>→</span> Frontal lobe (plan) <span class='arrow'>→</span> Basal ganglia (action selection) <span class='arrow'>→</span> Motor cortex (command) <span class='arrow'>→</span> Cerebellum (fine-tune balance + timing) <span class='arrow'>→</span> Spinal cord <span class='arrow'>→</span> Motor neuron <span class='arrow'>→</span> Muscle",
   setup() {
     clearField();
     sceneLocal = {
@@ -2707,11 +2809,11 @@ const sceneMovement = {
 //  SCENE 8: Vision Deep Dive (eye dissection lead-in)
 // =====================================================
 const sceneVision = {
-  phase: 'Step 8: Vision Deep Dive',
+  phase: 'Step 10: Vision Deep Dive',
   phaseColor: C.occipital,
-  notes: "Light bounces off the world and lands on the <strong>retina</strong>, a layer of light-sensitive cells at the back of the eye. The retina converts light into neural signals, which travel along the <strong>optic nerve</strong> to the <strong>thalamus</strong>, then to the <strong>occipital lobe</strong> where the brain builds a picture. The <strong>parietal lobe</strong> places that picture in space and the <strong>frontal lobe</strong> interprets what you are looking at. <strong>The eye detects information, but the brain constructs perception.</strong>",
-  notebook: "Sketch a side view of the eye: <strong>cornea → lens → retina → optic nerve</strong>. Then continue the path into the brain: <strong>optic nerve → thalamus → occipital lobe → parietal + frontal lobes</strong>. Write the sentence: <strong>the eye detects, the brain perceives</strong>. You will dissect a real eye soon.",
-  pathwayKey: "Light <span class='arrow'>→</span> Cornea + lens <span class='arrow'>→</span> Retina <span class='arrow'>→</span> Optic nerve <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Occipital lobe (build image) <span class='arrow'>→</span> Parietal + Frontal lobes (interpret + act)",
+  notes: "Light bounces off the world and lands on the <strong>retina</strong>, a layer of light-sensitive cells at the back of the eye. The retina converts light into neural signals, which travel along the <strong>optic nerve</strong> to the <strong>thalamus</strong>, then to the <strong>occipital lobe</strong>, the brain's <strong>vision processor</strong>. The <strong>parietal lobe</strong> places the image in space (spatial awareness) and the <strong>frontal lobe</strong> interprets what you are looking at. <strong>The eye detects information, but the brain constructs perception.</strong>",
+  notebook: "Add a row: <strong>STIMULUS</strong> = light, <strong>SENSORY MODALITY</strong> = vision (eye → retina), <strong>BRAIN REGIONS</strong> = thalamus → occipital lobe → parietal lobe → frontal lobe, <strong>RESPONSE</strong> = you see and recognize. Write the rules: <strong>occipital lobe = vision. Parietal lobe = spatial awareness.</strong> You will dissect a real eye soon — sketch the eye structure too: cornea → lens → retina → optic nerve.",
+  pathwayKey: "Light <span class='arrow'>→</span> Cornea + lens <span class='arrow'>→</span> Retina <span class='arrow'>→</span> Optic nerve <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Occipital lobe (builds image) <span class='arrow'>→</span> Parietal lobe (places it in space) <span class='arrow'>→</span> Frontal lobe (you recognize it)",
   setup() {
     clearField();
     sceneLocal = {
@@ -2816,11 +2918,11 @@ function drawEyeDiagram(ctx, x, y, t) {
 //  SCENE 9: Reward Pathway
 // =====================================================
 const sceneReward = {
-  phase: 'Step 9: Reward Pathway',
+  phase: 'Step 7: Reward Pathway',
   phaseColor: C.accumbens,
-  notes: "You eat your favorite dessert. You win the big game. Your phone buzzes with a notification. All three light up the same pathway. <strong>Dopamine</strong> released into the <strong>nucleus accumbens</strong> tells the brain <strong>this is worth doing again</strong>. The <strong>frontal lobe</strong> joins in to track outcomes. The <strong>hippocampus</strong> remembers the cues. The <strong>amygdala</strong> tags it with emotional weight. The <strong>hypothalamus</strong> drives the bodily craving. Reward is normal and important. It is what makes you pursue goals, learn, and feel motivated.",
-  notebook: "Sketch the <strong>reward pathway</strong>: <strong>reward cue → nucleus accumbens (dopamine) → frontal lobe + hippocampus + amygdala + hypothalamus</strong>. Write the phrase: <strong>dopamine = do that again</strong>. Then list three healthy rewards in your life that activate this pathway.",
-  pathwayKey: "Reward cue <span class='arrow'>→</span> Sensory input <span class='arrow'>→</span> Nucleus accumbens (dopamine) <span class='arrow'>→</span> Frontal lobe (motivation) + Hippocampus (remember cue) + Amygdala (emotion) + Hypothalamus (craving)",
+  notes: "You eat your favorite dessert. You win the big game. Your phone buzzes with a notification. All three light up the same pathway. <strong>Dopamine</strong> released into the <strong>nucleus accumbens</strong> tells the brain <strong>this is worth doing again</strong>. The <strong>frontal lobe</strong> tracks the outcome. The <strong>hippocampus</strong> remembers the cue. Reward is normal and important — it is how you learn what to pursue.",
+  notebook: "Add a row: <strong>STIMULUS</strong> = a reward cue (winning, food, praise), <strong>SENSORY MODALITY</strong> = depends (vision, taste, hearing), <strong>BRAIN REGIONS</strong> = nucleus accumbens (dopamine) → frontal lobe + hippocampus, <strong>RESPONSE</strong> = pleasure + motivation to do it again. Write the rule: <strong>nucleus accumbens = reward and motivation. Dopamine = do that again.</strong>",
+  pathwayKey: "Reward cue <span class='arrow'>→</span> Eye / sensory input <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Nucleus accumbens (dopamine release) <span class='arrow'>→</span> Frontal lobe (motivation) + Hippocampus (remember the cue)",
   setup() {
     clearField();
     sceneLocal = {
@@ -2872,10 +2974,10 @@ const sceneReward = {
 //  SCENE 10: Reward Hijacking / Addiction Case Study
 // =====================================================
 const sceneHijack = {
-  phase: 'Step 10: Reward Hijacking',
+  phase: 'Step 8: Reward Hijacking (Addiction Case Study)',
   phaseColor: '#f472b6',
-  notes: "Some stimuli activate the reward pathway much more strongly than natural rewards: <strong>addictive drugs, certain foods, gambling, phone notifications</strong>. Each big hit of <strong>dopamine</strong> tells the brain <strong>this matters more than anything</strong>. The <strong>hippocampus</strong> memorizes the cues. The <strong>amygdala</strong> tags them with urgency. Over time, the <strong>frontal lobe</strong> has a harder time inhibiting the pull, and the cue alone (just seeing the notification, smelling the substance) triggers craving. This is not moral failure. It is the brain doing what brains do: strengthening pathways that fire together. <strong>And because the brain can change, recovery and rewiring are real.</strong>",
-  notebook: "Draw two versions side by side. <strong>Normal reward</strong>: cue → small dopamine → frontal lobe regulates. <strong>Hijacked reward</strong>: cue → huge dopamine flood → strong cue memory in hippocampus → craving from hypothalamus → frontal lobe struggles to inhibit. Write: <strong>cues + memory = craving</strong>. Then write one sentence on why <strong>neuroplasticity</strong> means change is possible.",
+  notes: "Some stimuli activate the reward pathway much more strongly than natural rewards: <strong>addictive drugs, certain foods, gambling, phone notifications</strong>. Each big hit of <strong>dopamine</strong> tells the brain <strong>this matters more than anything</strong>. The <strong>hippocampus</strong> memorizes the cues. The <strong>amygdala</strong> tags them with urgency. The <strong>hypothalamus</strong> drives bodily craving. Over time the <strong>frontal lobe</strong> struggles to inhibit the pull, and the cue alone (a notification, a smell, a place) triggers craving. This is not moral failure — it is the brain strengthening pathways that fire together. <strong>And because the brain can change, recovery and rewiring are real.</strong>",
+  notebook: "Add a row: <strong>STIMULUS</strong> = addictive cue (notification, substance), <strong>SENSORY MODALITY</strong> = often vision (seeing the cue), <strong>BRAIN REGIONS</strong> = nucleus accumbens + hippocampus + amygdala + hypothalamus, <strong>RESPONSE</strong> = craving + compulsion. Write the rules: <strong>cues + memory = craving. Neuroplasticity means change is possible.</strong> Toggle <strong>Normal Reward</strong> vs <strong>Hijacked</strong> below and compare.",
   pathwayKey: "Cue (notification / drug / image) <span class='arrow'>→</span> Sensory input <span class='arrow'>→</span> Nucleus accumbens (BIG dopamine) <span class='arrow'>→</span> Hippocampus (cue memory) + Amygdala (urgency) + Hypothalamus (craving) <span class='arrow'>→</span> Frontal lobe inhibition challenged",
   setup() {
     clearField();
@@ -3372,7 +3474,67 @@ function arrEq(a, b) {
 }
 
 // =====================================================
-//  Scene list
+//  SCENE 13: Reflect & Synthesize
+// =====================================================
+const sceneReflect = {
+  phase: 'Step 13: Reflect & Synthesize',
+  phaseColor: '#c7d2fe',
+  notes: "Look back at your tracker table. You traced pathways for <strong>touch, pain, hearing, smell, vision, reward, addiction, and movement</strong>. Every one followed the same overall shape but emphasized different brain regions. The brain is not one piece doing one thing — it is many regions working in <strong>parallel</strong>, and the pathway depends on the sensory modality and the kind of response needed. <strong>Each region has a specialty. They work together.</strong>",
+  notebook: "<strong>Reflect in your notebook</strong>. Answer all three: <strong>(1)</strong> Which brain region surprised you the most, and why? <strong>(2)</strong> Pick one pathway you traced today and explain it in your own words from stimulus to response, naming the sensory modality and the key brain region for that pathway. <strong>(3)</strong> Connect this to what you already know: how do <strong>action potentials</strong> and <strong>synapses</strong> from the last two simulations make these whole-brain pathways possible? Write a few sentences for each.",
+  setup() {
+    clearField();
+    sceneLocal = {
+      cycleIdx: 0,
+      cycleT: 0,
+      pathways: [
+        { name: 'Touch / Pain', color: '#fbbf24', nodes: ['skin', 'thalamus', 'parietal', 'frontal'] },
+        { name: 'Hearing (Fear)', color: '#f87171', nodes: ['ear', 'thalamus', 'amygdala', 'hypothalamus', 'gland'] },
+        { name: 'Smell (Memory)', color: '#f472b6', nodes: ['nose', 'hippocampus', 'temporal', 'frontal'] },
+        { name: 'Vision', color: '#a78bfa', nodes: ['eye', 'thalamus', 'occipital', 'parietal', 'frontal'] },
+        { name: 'Reward', color: '#fbbf24', nodes: ['eye', 'thalamus', 'accumbens', 'frontal'] },
+        { name: 'Motor Coordination', color: '#4ade80', nodes: ['frontal', 'basalganglia', 'motor', 'cerebellum', 'spinal', 'motorNeuron', 'muscle'] },
+      ]
+    };
+  },
+  update(dt) {
+    sceneLocal.cycleT += dt;
+    if (sceneLocal.cycleT > 4500) {
+      sceneLocal.cycleT = 0;
+      sceneLocal.cycleIdx = (sceneLocal.cycleIdx + 1) % sceneLocal.pathways.length;
+    }
+  },
+  draw(ctx, t) {
+    drawBrainBase(ctx, {});
+    const pw = sceneLocal.pathways[sceneLocal.cycleIdx];
+    const progress = Math.min(1, sceneLocal.cycleT / 3200);
+    drawAnimatedSequence(ctx, pw.nodes, progress, pw.color, t);
+    const map = {};
+    const lit = Math.floor(progress * (pw.nodes.length - 1));
+    for (let i = 0; i <= lit; i++) map[pw.nodes[i]] = 1;
+    drawAllNodes(ctx, t, map, true);
+
+    // Show all 6 pathway names in a list with current one highlighted
+    ctx.save();
+    ctx.font = '700 13px -apple-system, system-ui';
+    ctx.fillStyle = '#c7d2fe';
+    ctx.textAlign = 'left';
+    ctx.fillText('Cycling through every pathway you learned:', 70, 30);
+    sceneLocal.pathways.forEach((p, i) => {
+      const isActive = i === sceneLocal.cycleIdx;
+      const y = 60 + i * 22;
+      ctx.fillStyle = isActive ? p.color : 'rgba(160, 160, 160, 0.45)';
+      ctx.font = isActive ? '700 12px -apple-system, system-ui' : '500 12px -apple-system, system-ui';
+      ctx.fillText((isActive ? '▶ ' : '   ') + p.name, 70, y);
+    });
+    ctx.restore();
+  }
+};
+
+// =====================================================
+//  Scene list — in scaffolded teaching order:
+//  Intro → Brain Map → Standard → Reflex → Fear → Memory →
+//  Reward → Hijacking → Motor → Vision → Scenario Lab →
+//  Challenge → Reflect
 // =====================================================
 const scenes = [
   sceneIntro,
@@ -3381,12 +3543,13 @@ const scenes = [
   sceneReflex,
   sceneFear,
   sceneSmellMemory,
-  sceneMovement,
-  sceneVision,
   sceneReward,
   sceneHijack,
+  sceneMovement,
+  sceneVision,
   sceneScenarioLab,
   sceneChallenge,
+  sceneReflect,
 ];
 
 // =====================================================
