@@ -418,320 +418,1262 @@ function roundRect(ctx, x, y, w, h, r) {
 }
 
 // =====================================================
-//  Brain region data — positions in canvas coords
+//  Brain region data — anatomical positions
+//  kind: 'lobe' (cortex polygon), 'deep' (subcortical shape),
+//        'cerebellum', 'brainstem'
 // =====================================================
 const REGIONS = {
-  // outer cortex lobes
-  frontal:      { x: 470, y: 235, r: 42, color: C.frontal, label: 'Frontal Lobe', role: 'Plans, decides, inhibits, evaluates', depth: 'cortex' },
-  motor:        { x: 625, y: 165, r: 26, color: C.motor, label: 'Motor Cortex', role: 'Sends movement commands to muscles', depth: 'cortex' },
-  parietal:     { x: 760, y: 180, r: 38, color: C.parietal, label: 'Parietal Lobe', role: 'Touch, body position, spatial awareness', depth: 'cortex' },
-  occipital:    { x: 935, y: 250, r: 36, color: C.occipital, label: 'Occipital Lobe', role: 'Vision processing', depth: 'cortex' },
-  temporal:     { x: 720, y: 405, r: 40, color: C.temporal, label: 'Temporal Lobe', role: 'Hearing, language, memory', depth: 'cortex' },
-  // deep / limbic / subcortical
-  thalamus:     { x: 730, y: 290, r: 22, color: C.thalamus, label: 'Thalamus', role: 'Relay center for sensory information', depth: 'deep' },
-  hippocampus:  { x: 825, y: 360, r: 18, color: C.hippocampus, label: 'Hippocampus', role: 'Forms and retrieves memories', depth: 'deep' },
-  amygdala:     { x: 770, y: 372, r: 16, color: C.amygdala, label: 'Amygdala', role: 'Detects fear and emotional salience', depth: 'deep' },
-  hypothalamus: { x: 700, y: 350, r: 16, color: C.hypothalamus, label: 'Hypothalamus', role: 'Body regulation, hormones, fight or flight', depth: 'deep' },
-  accumbens:    { x: 620, y: 320, r: 18, color: C.accumbens, label: 'Nucleus Accumbens', role: 'Reward, motivation, reinforcement', depth: 'deep' },
-  basalganglia: { x: 670, y: 270, r: 20, color: C.basal, label: 'Basal Ganglia', role: 'Action selection, habit and movement patterns', depth: 'deep' },
-  // hindbrain
-  cerebellum:   { x: 980, y: 425, r: 40, color: C.cerebellum, label: 'Cerebellum', role: 'Balance, timing, fine motor coordination', depth: 'cortex' },
-  brainstem:    { x: 880, y: 485, r: 20, color: C.brainstem, label: 'Brain Stem', role: 'Breathing, heart rate, arousal', depth: 'cortex' },
+  // Cortex lobes
+  frontal:      { x: 515, y: 230, r: 60, color: C.frontal, label: 'Frontal Lobe', role: 'Plans, decides, inhibits, evaluates', kind: 'lobe' },
+  motor:        { x: 628, y: 198, r: 22, color: C.motor, label: 'Motor Cortex', role: 'Sends movement commands to muscles', kind: 'lobe' },
+  parietal:     { x: 780, y: 200, r: 60, color: C.parietal, label: 'Parietal Lobe', role: 'Touch, body position, spatial awareness', kind: 'lobe' },
+  occipital:    { x: 990, y: 260, r: 50, color: C.occipital, label: 'Occipital Lobe', role: 'Vision processing', kind: 'lobe' },
+  temporal:     { x: 700, y: 408, r: 62, color: C.temporal, label: 'Temporal Lobe', role: 'Hearing, language, memory', kind: 'lobe' },
+  // Deep structures (subcortical)
+  thalamus:     { x: 745, y: 280, r: 28, color: C.thalamus, label: 'Thalamus', role: 'Relay center for sensory information', kind: 'deep' },
+  hypothalamus: { x: 720, y: 340, r: 18, color: C.hypothalamus, label: 'Hypothalamus', role: 'Body regulation, hormones, fight or flight', kind: 'deep' },
+  hippocampus:  { x: 820, y: 372, r: 20, color: C.hippocampus, label: 'Hippocampus', role: 'Forms and retrieves memories', kind: 'deep' },
+  amygdala:     { x: 778, y: 380, r: 16, color: C.amygdala, label: 'Amygdala', role: 'Detects fear and emotional salience', kind: 'deep' },
+  accumbens:    { x: 615, y: 325, r: 18, color: C.accumbens, label: 'Nucleus Accumbens', role: 'Reward, motivation, reinforcement', kind: 'deep' },
+  basalganglia: { x: 685, y: 285, r: 22, color: C.basal, label: 'Basal Ganglia', role: 'Action selection, habit and movement patterns', kind: 'deep' },
+  // Hindbrain
+  cerebellum:   { x: 985, y: 445, r: 50, color: C.cerebellum, label: 'Cerebellum', role: 'Balance, timing, fine motor coordination', kind: 'cerebellum' },
+  brainstem:    { x: 885, y: 490, r: 36, color: C.brainstem, label: 'Brain Stem', role: 'Breathing, heart rate, arousal', kind: 'brainstem' },
 };
 
 const INPUTS = {
-  eye:  { x: 150, y: 215, r: 26, label: 'Eye', color: C.eye },
-  ear:  { x: 150, y: 305, r: 26, label: 'Ear', color: C.ear },
-  nose: { x: 150, y: 395, r: 26, label: 'Nose', color: C.nose },
-  skin: { x: 150, y: 485, r: 26, label: 'Skin / Touch', color: C.skin },
+  eye:  { x: 145, y: 215, r: 32, label: 'Eye', color: C.eye },
+  ear:  { x: 145, y: 305, r: 30, label: 'Ear', color: C.ear },
+  nose: { x: 145, y: 395, r: 28, label: 'Nose', color: C.nose },
+  skin: { x: 145, y: 490, r: 32, label: 'Skin / Touch', color: C.skin },
 };
 
 const OUTPUTS = {
-  spinal:      { x: 1170, y: 535, r: 18, label: 'Spinal Cord', color: C.spinal },
-  motorNeuron: { x: 1310, y: 460, r: 18, label: 'Motor Neuron', color: C.motorNeuron },
-  muscle:      { x: 1450, y: 360, r: 26, label: 'Muscle', color: C.muscle },
-  gland:       { x: 1450, y: 480, r: 22, label: 'Gland', color: C.gland },
+  spinal:      { x: 1200, y: 545, r: 22, label: 'Spinal Cord', color: C.spinal },
+  motorNeuron: { x: 1330, y: 480, r: 18, label: 'Motor Neuron', color: C.motorNeuron },
+  muscle:      { x: 1470, y: 365, r: 40, label: 'Muscle', color: C.muscle },
+  gland:       { x: 1470, y: 490, r: 26, label: 'Gland', color: C.gland },
 };
 
 // =====================================================
-//  Brain silhouette (stylized sagittal, facing left)
+//  Lobe path definitions — closed polygons via beziers.
+//  All lobes share boundary curves so the brain reads as
+//  one anatomical surface, divided by sulci.
 // =====================================================
-function drawBrainSilhouette(ctx, opts = {}) {
+function pathFrontal(ctx) {
+  ctx.beginPath();
+  ctx.moveTo(430, 175);
+  ctx.bezierCurveTo(440, 130, 510, 95, 590, 92);
+  ctx.bezierCurveTo(625, 90, 645, 95, 648, 98);
+  ctx.bezierCurveTo(644, 165, 628, 235, 610, 295);
+  ctx.bezierCurveTo(555, 300, 490, 300, 445, 295);
+  ctx.bezierCurveTo(422, 290, 412, 268, 410, 240);
+  ctx.bezierCurveTo(408, 215, 415, 192, 430, 175);
+  ctx.closePath();
+}
+function pathParietal(ctx) {
+  ctx.beginPath();
+  ctx.moveTo(648, 98);
+  ctx.bezierCurveTo(720, 80, 815, 80, 893, 105);
+  ctx.bezierCurveTo(898, 165, 902, 220, 908, 260);
+  ctx.bezierCurveTo(870, 278, 800, 290, 720, 295);
+  ctx.bezierCurveTo(670, 297, 630, 296, 610, 295);
+  ctx.bezierCurveTo(628, 235, 644, 165, 648, 98);
+  ctx.closePath();
+}
+function pathOccipital(ctx) {
+  ctx.beginPath();
+  ctx.moveTo(893, 105);
+  ctx.bezierCurveTo(980, 130, 1045, 180, 1070, 240);
+  ctx.bezierCurveTo(1082, 290, 1070, 350, 1042, 392);
+  ctx.bezierCurveTo(1010, 400, 970, 392, 945, 378);
+  ctx.bezierCurveTo(925, 350, 915, 310, 908, 260);
+  ctx.bezierCurveTo(902, 220, 898, 165, 893, 105);
+  ctx.closePath();
+}
+function pathTemporal(ctx) {
+  ctx.beginPath();
+  ctx.moveTo(445, 295);
+  ctx.bezierCurveTo(490, 300, 555, 300, 610, 295);
+  ctx.bezierCurveTo(670, 297, 720, 295, 800, 290);
+  ctx.bezierCurveTo(870, 278, 900, 268, 908, 260);
+  ctx.bezierCurveTo(915, 310, 925, 350, 945, 378);
+  ctx.bezierCurveTo(905, 425, 845, 462, 780, 470);
+  ctx.bezierCurveTo(680, 472, 580, 462, 500, 440);
+  ctx.bezierCurveTo(450, 422, 425, 385, 425, 350);
+  ctx.bezierCurveTo(427, 322, 435, 305, 445, 295);
+  ctx.closePath();
+}
+// Motor cortex: narrow precentral gyrus along central sulcus
+function pathMotor(ctx) {
+  ctx.beginPath();
+  ctx.moveTo(615, 100);
+  ctx.bezierCurveTo(614, 165, 600, 235, 585, 296);
+  ctx.lineTo(610, 295);
+  ctx.bezierCurveTo(628, 235, 644, 165, 648, 98);
+  ctx.lineTo(615, 100);
+  ctx.closePath();
+}
+
+const LOBE_PATHS = {
+  frontal: pathFrontal,
+  parietal: pathParietal,
+  occipital: pathOccipital,
+  temporal: pathTemporal,
+  motor: pathMotor,
+};
+
+// =====================================================
+//  Anatomical cerebrum — silhouette + cortex base + sulci + gyri
+// =====================================================
+function drawCerebrumAnatomy(ctx, opts = {}) {
   const alpha = opts.alpha != null ? opts.alpha : 1;
   ctx.save();
   ctx.globalAlpha = alpha;
 
-  // Outer halo
-  const halo = ctx.createRadialGradient(740, 300, 80, 740, 300, 480);
-  halo.addColorStop(0, 'rgba(99, 102, 241, 0.08)');
-  halo.addColorStop(0.5, 'rgba(99, 102, 241, 0.03)');
-  halo.addColorStop(1, 'rgba(99, 102, 241, 0)');
+  // Soft outer halo
+  const halo = ctx.createRadialGradient(740, 280, 100, 740, 280, 480);
+  halo.addColorStop(0, 'rgba(212, 160, 148, 0.10)');
+  halo.addColorStop(1, 'rgba(212, 160, 148, 0)');
   ctx.fillStyle = halo;
   ctx.beginPath();
-  ctx.arc(740, 300, 480, 0, Math.PI * 2);
+  ctx.arc(740, 280, 480, 0, Math.PI * 2);
   ctx.fill();
 
-  // Cerebrum body (smooth sagittal silhouette)
+  // Outer cerebrum silhouette (single closed path that matches the lobe boundaries)
   ctx.beginPath();
-  ctx.moveTo(425, 175);
-  ctx.bezierCurveTo(450, 90, 660, 60, 805, 90);
-  ctx.bezierCurveTo(945, 115, 1055, 175, 1075, 270);
-  ctx.bezierCurveTo(1085, 340, 1055, 385, 1015, 395);
-  ctx.bezierCurveTo(1020, 405, 1015, 415, 1010, 420);
-  ctx.bezierCurveTo(1040, 425, 1040, 475, 990, 480);
-  ctx.bezierCurveTo(960, 485, 935, 470, 925, 460);
-  ctx.bezierCurveTo(920, 475, 905, 490, 890, 495);
-  ctx.bezierCurveTo(885, 505, 880, 510, 875, 515);
-  ctx.lineTo(875, 540);
-  ctx.bezierCurveTo(870, 555, 850, 560, 835, 555);
-  ctx.bezierCurveTo(830, 540, 825, 525, 820, 510);
-  ctx.bezierCurveTo(770, 510, 660, 500, 555, 475);
-  ctx.bezierCurveTo(470, 460, 415, 410, 410, 340);
-  ctx.bezierCurveTo(405, 280, 410, 220, 425, 175);
+  ctx.moveTo(430, 175);
+  ctx.bezierCurveTo(440, 130, 510, 95, 590, 92);
+  ctx.bezierCurveTo(720, 80, 815, 80, 893, 105);
+  ctx.bezierCurveTo(980, 130, 1045, 180, 1070, 240);
+  ctx.bezierCurveTo(1082, 290, 1070, 350, 1042, 392);
+  ctx.bezierCurveTo(1010, 400, 970, 392, 945, 378);
+  ctx.bezierCurveTo(905, 425, 845, 462, 780, 470);
+  ctx.bezierCurveTo(680, 472, 580, 462, 500, 440);
+  ctx.bezierCurveTo(450, 422, 425, 385, 425, 350);
+  ctx.bezierCurveTo(420, 295, 415, 225, 430, 175);
   ctx.closePath();
 
-  // Inner gradient fill
-  const bodyGrad = ctx.createRadialGradient(700, 270, 50, 720, 290, 400);
-  bodyGrad.addColorStop(0, 'rgba(99, 102, 241, 0.18)');
-  bodyGrad.addColorStop(0.5, 'rgba(67, 56, 202, 0.10)');
-  bodyGrad.addColorStop(1, 'rgba(30, 27, 75, 0.06)');
-  ctx.fillStyle = bodyGrad;
+  // Cortex base fill (warm pink-tan, anatomical)
+  const cortex = ctx.createRadialGradient(680, 230, 80, 720, 280, 420);
+  cortex.addColorStop(0, 'rgba(248, 217, 206, 0.95)');
+  cortex.addColorStop(0.55, 'rgba(212, 154, 141, 0.92)');
+  cortex.addColorStop(1, 'rgba(140, 80, 65, 0.88)');
+  ctx.fillStyle = cortex;
   ctx.fill();
 
-  // Outline
-  ctx.strokeStyle = 'rgba(165, 180, 252, 0.32)';
-  ctx.lineWidth = 1.5;
+  // Outer outline
+  ctx.strokeStyle = 'rgba(115, 60, 48, 0.65)';
+  ctx.lineWidth = 1.8;
   ctx.stroke();
 
-  // Cerebrum top highlight
-  ctx.strokeStyle = 'rgba(199, 210, 254, 0.18)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(440, 150);
-  ctx.bezierCurveTo(550, 95, 700, 75, 820, 105);
-  ctx.stroke();
-
-  // Sulcus / gyrus texture lines (subtle)
-  ctx.strokeStyle = 'rgba(165, 180, 252, 0.12)';
-  ctx.lineWidth = 1;
-  const sulci = [
-    [475, 165, 530, 200, 590, 180],
-    [620, 130, 680, 150, 730, 130],
-    [780, 130, 840, 160, 890, 150],
-    [930, 175, 990, 220, 1020, 280],
-    [560, 230, 640, 250, 720, 235],
-    [780, 250, 870, 270, 950, 290],
-    [480, 320, 560, 340, 660, 335],
-    [720, 360, 820, 380, 920, 380],
-    [480, 400, 580, 425, 690, 440],
-    [780, 460, 850, 470, 900, 465],
-  ];
-  sulci.forEach(s => {
-    ctx.beginPath();
-    ctx.moveTo(s[0], s[1]);
-    ctx.quadraticCurveTo(s[2], s[3], s[4], s[5]);
-    ctx.stroke();
-  });
-
-  // Central sulcus (subtle separator between frontal and parietal)
-  ctx.strokeStyle = 'rgba(199, 210, 254, 0.18)';
+  // Top sheen
+  ctx.strokeStyle = 'rgba(255, 230, 215, 0.4)';
   ctx.lineWidth = 1.2;
   ctx.beginPath();
-  ctx.moveTo(560, 105);
-  ctx.bezierCurveTo(580, 180, 575, 250, 565, 320);
+  ctx.moveTo(450, 142);
+  ctx.bezierCurveTo(560, 102, 720, 86, 870, 96);
   ctx.stroke();
 
-  // Lateral sulcus
+  // Sulci — anatomical dividing fissures
+  ctx.lineCap = 'round';
+
+  // Central sulcus (frontal | parietal)
+  ctx.strokeStyle = 'rgba(110, 55, 42, 0.7)';
+  ctx.lineWidth = 2.4;
   ctx.beginPath();
-  ctx.moveTo(560, 330);
-  ctx.bezierCurveTo(660, 345, 770, 360, 870, 365);
+  ctx.moveTo(648, 98);
+  ctx.bezierCurveTo(644, 165, 628, 235, 610, 295);
   ctx.stroke();
+  // soft shadow above central sulcus
+  ctx.strokeStyle = 'rgba(255, 220, 200, 0.30)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(652, 98);
+  ctx.bezierCurveTo(648, 165, 632, 235, 614, 295);
+  ctx.stroke();
+
+  // Lateral (Sylvian) fissure (temporal | rest)
+  ctx.strokeStyle = 'rgba(110, 55, 42, 0.7)';
+  ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  ctx.moveTo(445, 295);
+  ctx.bezierCurveTo(560, 305, 720, 300, 830, 290);
+  ctx.bezierCurveTo(870, 282, 900, 270, 945, 282);
+  ctx.stroke();
+
+  // Parieto-occipital sulcus (parietal | occipital)
+  ctx.strokeStyle = 'rgba(110, 55, 42, 0.6)';
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(895, 105);
+  ctx.bezierCurveTo(902, 165, 906, 220, 908, 260);
+  ctx.stroke();
+
+  // Gyri texture across lobes — subtle wavy lines giving the brain its surface look
+  ctx.strokeStyle = 'rgba(115, 60, 48, 0.32)';
+  ctx.lineWidth = 0.9;
+  const gyri = [
+    // frontal lobe
+    [443, 198, 510, 195, 580, 200],
+    [445, 232, 510, 232, 580, 230],
+    [450, 262, 525, 264, 585, 260],
+    // parietal lobe
+    [680, 130, 770, 122, 870, 130],
+    [685, 170, 775, 165, 875, 175],
+    [695, 212, 785, 210, 880, 222],
+    [710, 250, 800, 252, 895, 252],
+    // occipital lobe
+    [920, 165, 980, 195, 1025, 235],
+    [935, 215, 998, 252, 1040, 300],
+    [945, 270, 1005, 312, 1042, 358],
+    // temporal lobe
+    [478, 358, 580, 376, 680, 396],
+    [495, 398, 600, 418, 720, 432],
+    [540, 432, 645, 452, 760, 458],
+    [690, 458, 800, 458, 880, 438],
+  ];
+  gyri.forEach(g => {
+    ctx.beginPath();
+    ctx.moveTo(g[0], g[1]);
+    ctx.quadraticCurveTo(g[2], g[3], g[4], g[5]);
+    ctx.stroke();
+  });
 
   ctx.restore();
 }
 
 // =====================================================
-//  Draw a brain region as a glowing node
+//  Lobe activation overlay — colored tint inside lobe polygon
+// =====================================================
+function drawLobeActivation(ctx, key, activation, t, highlight) {
+  const fn = LOBE_PATHS[key];
+  if (!fn) return;
+  if (activation < 0.05 && (highlight || 0) < 0.05) return;
+  const r = REGIONS[key];
+  const color = r.color;
+  ctx.save();
+  ctx.lineJoin = 'round';
+  // Soft shadow halo when active
+  if (activation > 0.15) {
+    ctx.shadowBlur = 22 * activation;
+    ctx.shadowColor = rgba(color, 0.55);
+  }
+  // Fill the lobe polygon
+  fn(ctx);
+  const fillA = activation * 0.42 + (highlight || 0) * 0.20;
+  ctx.fillStyle = rgba(color, fillA);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  // Pulse stroke along the lobe outline
+  fn(ctx);
+  ctx.strokeStyle = rgba(color, 0.40 + activation * 0.4);
+  ctx.lineWidth = 1.6 + activation * 1.2;
+  ctx.stroke();
+  // Breathing glow stroke
+  if (activation > 0.15) {
+    const pulse = (Math.sin((t || 0) / 350 + r.x * 0.01) + 1) * 0.5;
+    fn(ctx);
+    ctx.strokeStyle = rgba(color, (0.20 + pulse * 0.3) * activation);
+    ctx.lineWidth = 5;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// =====================================================
+//  Deep structure helpers (subcortical anatomical shapes)
+// =====================================================
+function drawDeepPulse(ctx, r, activation, t, radius) {
+  if (activation < 0.1) return;
+  const phase = ((t || 0) / 600 + r.x * 0.005) % 1;
+  const a = (1 - phase) * 0.5 * activation;
+  ctx.strokeStyle = rgba(r.color, a);
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.arc(r.x, r.y, radius + phase * 14, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+function drawThalamus(ctx, activation, t) {
+  const r = REGIONS.thalamus;
+  ctx.save();
+  // Egg-shaped, tilted forward — sits at the center of the brain
+  const a = 0.55 + activation * 0.4;
+  const grad = ctx.createRadialGradient(r.x - 9, r.y - 7, 0, r.x, r.y, 30);
+  grad.addColorStop(0, rgba('#ede9fe', a));
+  grad.addColorStop(0.55, rgba(r.color, a));
+  grad.addColorStop(1, rgba('#5b21b6', a));
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.ellipse(r.x, r.y, 28, 19, -0.18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = rgba('#4c1d95', 0.65);
+  ctx.lineWidth = 1.3;
+  ctx.stroke();
+  // Inner specular
+  ctx.fillStyle = rgba('#ffffff', 0.28);
+  ctx.beginPath();
+  ctx.ellipse(r.x - 8, r.y - 6, 8, 5, -0.18, 0, Math.PI * 2);
+  ctx.fill();
+  drawDeepPulse(ctx, r, activation, t, 32);
+  ctx.restore();
+}
+
+function drawHypothalamus(ctx, activation, t) {
+  const r = REGIONS.hypothalamus;
+  ctx.save();
+  const a = 0.55 + activation * 0.4;
+  const grad = ctx.createRadialGradient(r.x - 5, r.y - 4, 0, r.x, r.y, 20);
+  grad.addColorStop(0, rgba('#ffedd5', a));
+  grad.addColorStop(0.55, rgba(r.color, a));
+  grad.addColorStop(1, rgba('#7c2d12', a));
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.ellipse(r.x, r.y, 18, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = rgba('#7c2d12', 0.65);
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  // Pituitary nub hanging down (subtle bump)
+  ctx.fillStyle = rgba(r.color, a * 0.95);
+  ctx.beginPath();
+  ctx.ellipse(r.x + 2, r.y + 13, 4, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  drawDeepPulse(ctx, r, activation, t, 24);
+  ctx.restore();
+}
+
+function drawHippocampus(ctx, activation, t) {
+  const r = REGIONS.hippocampus;
+  ctx.save();
+  // Seahorse-curl tube — characteristic hippocampal shape
+  const a = 0.7 + activation * 0.3;
+  ctx.strokeStyle = rgba(r.color, a);
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 11;
+  ctx.beginPath();
+  ctx.moveTo(r.x - 20, r.y + 7);
+  ctx.bezierCurveTo(r.x - 14, r.y - 8, r.x + 6, r.y - 12, r.x + 14, r.y - 3);
+  ctx.bezierCurveTo(r.x + 20, r.y + 5, r.x + 16, r.y + 11, r.x + 8, r.y + 9);
+  ctx.stroke();
+  // Inner highlight (lighter core along the tube)
+  ctx.strokeStyle = rgba('#fef3c7', 0.65);
+  ctx.lineWidth = 3.5;
+  ctx.beginPath();
+  ctx.moveTo(r.x - 18, r.y + 5);
+  ctx.bezierCurveTo(r.x - 12, r.y - 6, r.x + 4, r.y - 10, r.x + 12, r.y - 2);
+  ctx.stroke();
+  // outline
+  ctx.strokeStyle = 'rgba(120, 80, 20, 0.55)';
+  ctx.lineWidth = 1.3;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(r.x - 20, r.y + 7);
+  ctx.bezierCurveTo(r.x - 14, r.y - 8, r.x + 6, r.y - 12, r.x + 14, r.y - 3);
+  ctx.bezierCurveTo(r.x + 20, r.y + 5, r.x + 16, r.y + 11, r.x + 8, r.y + 9);
+  ctx.stroke();
+  drawDeepPulse(ctx, r, activation, t, 28);
+  ctx.restore();
+}
+
+function drawAmygdala(ctx, activation, t) {
+  const r = REGIONS.amygdala;
+  ctx.save();
+  // Almond shape (the literal meaning of amygdala)
+  const a = 0.65 + activation * 0.35;
+  const grad = ctx.createRadialGradient(r.x - 4, r.y - 4, 0, r.x, r.y, 18);
+  grad.addColorStop(0, rgba('#fecaca', a));
+  grad.addColorStop(0.55, rgba(r.color, a));
+  grad.addColorStop(1, rgba('#7f1d1d', a));
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.ellipse(r.x, r.y, 15, 9, -0.4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = rgba('#7f1d1d', 0.65);
+  ctx.lineWidth = 1.3;
+  ctx.stroke();
+  drawDeepPulse(ctx, r, activation, t, 22);
+  ctx.restore();
+}
+
+function drawAccumbens(ctx, activation, t) {
+  const r = REGIONS.accumbens;
+  ctx.save();
+  const a = 0.65 + activation * 0.35;
+  const grad = ctx.createRadialGradient(r.x - 5, r.y - 4, 0, r.x, r.y, 20);
+  grad.addColorStop(0, rgba('#fef3c7', a));
+  grad.addColorStop(0.55, rgba(r.color, a));
+  grad.addColorStop(1, rgba('#78350f', a));
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.ellipse(r.x, r.y, 15, 11, 0.18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = rgba('#78350f', 0.65);
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  drawDeepPulse(ctx, r, activation, t, 24);
+  ctx.restore();
+}
+
+function drawBasalGanglia(ctx, activation, t) {
+  const r = REGIONS.basalganglia;
+  ctx.save();
+  // Two-lobe cluster — caudate (back) + putamen (front)
+  const a = 0.6 + activation * 0.35;
+  const grad = ctx.createRadialGradient(r.x - 6, r.y - 4, 0, r.x, r.y, 26);
+  grad.addColorStop(0, rgba('#ecfccb', a));
+  grad.addColorStop(0.55, rgba(r.color, a));
+  grad.addColorStop(1, rgba('#365314', a));
+  ctx.fillStyle = grad;
+  // caudate
+  ctx.beginPath();
+  ctx.ellipse(r.x - 6, r.y + 2, 13, 11, -0.22, 0, Math.PI * 2);
+  ctx.fill();
+  // putamen
+  ctx.beginPath();
+  ctx.ellipse(r.x + 9, r.y - 3, 12, 9, 0.18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = rgba('#365314', 0.65);
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.ellipse(r.x - 6, r.y + 2, 13, 11, -0.22, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(r.x + 9, r.y - 3, 12, 9, 0.18, 0, Math.PI * 2);
+  ctx.stroke();
+  drawDeepPulse(ctx, r, activation, t, 28);
+  ctx.restore();
+}
+
+// =====================================================
+//  Cerebellum — characteristic foliate folded structure
+// =====================================================
+function drawCerebellum(ctx, activation, t) {
+  const r = REGIONS.cerebellum;
+  ctx.save();
+  // Halo when active
+  if (activation > 0.05) {
+    const halo = ctx.createRadialGradient(r.x, r.y, 0, r.x, r.y, 90);
+    halo.addColorStop(0, rgba(r.color, 0.30 * activation));
+    halo.addColorStop(1, rgba(r.color, 0));
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(r.x, r.y, 90, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Body — egg shape, tilted slightly
+  const grad = ctx.createRadialGradient(r.x - 18, r.y - 16, 0, r.x, r.y, 62);
+  grad.addColorStop(0, '#f0c4bb');
+  grad.addColorStop(0.55, '#c8867b');
+  grad.addColorStop(1, '#7a3e30');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.ellipse(r.x, r.y, 56, 42, 0.05, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(95, 50, 38, 0.7)';
+  ctx.lineWidth = 1.6;
+  ctx.stroke();
+  // Vermis ridge (central vertical line)
+  ctx.strokeStyle = 'rgba(95, 50, 38, 0.45)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(r.x - 4, r.y - 38);
+  ctx.bezierCurveTo(r.x - 2, r.y - 10, r.x - 2, r.y + 10, r.x - 4, r.y + 38);
+  ctx.stroke();
+  // Foliate folds (classic horizontal cerebellar striations)
+  ctx.strokeStyle = 'rgba(95, 50, 38, 0.7)';
+  ctx.lineWidth = 1.3;
+  const folds = [
+    { y: -34, w: 28 },
+    { y: -25, w: 38 },
+    { y: -15, w: 45 },
+    { y: -5, w: 50 },
+    { y: 5, w: 52 },
+    { y: 15, w: 48 },
+    { y: 25, w: 40 },
+    { y: 33, w: 28 },
+  ];
+  folds.forEach(f => {
+    ctx.beginPath();
+    ctx.moveTo(r.x - f.w, r.y + f.y);
+    ctx.quadraticCurveTo(r.x, r.y + f.y - 3, r.x + f.w, r.y + f.y);
+    ctx.stroke();
+  });
+  // Subtle outer-edge glow highlight on top-left
+  ctx.strokeStyle = 'rgba(255, 220, 205, 0.35)';
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.ellipse(r.x - 4, r.y - 4, 48, 36, 0.05, Math.PI * 0.95, Math.PI * 1.65);
+  ctx.stroke();
+  // Activation color overlay
+  if (activation > 0.05) {
+    ctx.fillStyle = rgba(r.color, 0.22 * activation);
+    ctx.beginPath();
+    ctx.ellipse(r.x, r.y, 56, 42, 0.05, 0, Math.PI * 2);
+    ctx.fill();
+    // pulse ring
+    const phase = ((t || 0) / 600 + r.x * 0.005) % 1;
+    ctx.strokeStyle = rgba(r.color, (1 - phase) * 0.5 * activation);
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.ellipse(r.x, r.y, 56 + phase * 16, 42 + phase * 12, 0.05, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// =====================================================
+//  Brain stem — 3-segment tube (midbrain, pons, medulla)
+// =====================================================
+function drawBrainStem(ctx, activation, t) {
+  const r = REGIONS.brainstem;
+  const cx = r.x;
+  const topY = 432;
+  const botY = 555;
+  ctx.save();
+  // Halo
+  if (activation > 0.05) {
+    const halo = ctx.createRadialGradient(cx, (topY + botY) / 2, 0, cx, (topY + botY) / 2, 70);
+    halo.addColorStop(0, rgba(r.color, 0.30 * activation));
+    halo.addColorStop(1, rgba(r.color, 0));
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(cx, (topY + botY) / 2, 70, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Body — narrow at top (midbrain), wider in middle (pons), tapers (medulla)
+  const grad = ctx.createLinearGradient(cx - 28, 0, cx + 28, 0);
+  grad.addColorStop(0, '#a06250');
+  grad.addColorStop(0.5, '#d49a8d');
+  grad.addColorStop(1, '#7c4234');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  // outline of brain stem tube
+  ctx.moveTo(cx - 16, topY);
+  ctx.bezierCurveTo(cx - 22, topY + 22, cx - 26, topY + 45, cx - 24, topY + 60);  // midbrain narrowing
+  ctx.bezierCurveTo(cx - 32, topY + 75, cx - 32, topY + 92, cx - 24, topY + 105); // pons bulge
+  ctx.bezierCurveTo(cx - 18, botY - 12, cx - 14, botY - 4, cx - 12, botY);         // medulla taper
+  ctx.lineTo(cx + 12, botY);
+  ctx.bezierCurveTo(cx + 14, botY - 4, cx + 18, botY - 12, cx + 24, topY + 105);
+  ctx.bezierCurveTo(cx + 32, topY + 92, cx + 32, topY + 75, cx + 24, topY + 60);
+  ctx.bezierCurveTo(cx + 26, topY + 45, cx + 22, topY + 22, cx + 16, topY);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(75, 35, 28, 0.65)';
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+  // Segment dividers (midbrain / pons / medulla)
+  ctx.strokeStyle = 'rgba(75, 35, 28, 0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx - 24, topY + 60);
+  ctx.lineTo(cx + 24, topY + 60);
+  ctx.moveTo(cx - 28, topY + 105);
+  ctx.lineTo(cx + 28, topY + 105);
+  ctx.stroke();
+  // Top highlight along left edge
+  ctx.strokeStyle = 'rgba(255, 220, 205, 0.30)';
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  ctx.moveTo(cx - 12, topY + 5);
+  ctx.bezierCurveTo(cx - 18, topY + 30, cx - 26, topY + 78, cx - 9, botY - 10);
+  ctx.stroke();
+  // Activation overlay
+  if (activation > 0.05) {
+    ctx.fillStyle = rgba(r.color, 0.22 * activation);
+    ctx.beginPath();
+    ctx.moveTo(cx - 16, topY);
+    ctx.bezierCurveTo(cx - 22, topY + 22, cx - 26, topY + 45, cx - 24, topY + 60);
+    ctx.bezierCurveTo(cx - 32, topY + 75, cx - 32, topY + 92, cx - 24, topY + 105);
+    ctx.bezierCurveTo(cx - 18, botY - 12, cx - 14, botY - 4, cx - 12, botY);
+    ctx.lineTo(cx + 12, botY);
+    ctx.bezierCurveTo(cx + 14, botY - 4, cx + 18, botY - 12, cx + 24, topY + 105);
+    ctx.bezierCurveTo(cx + 32, topY + 92, cx + 32, topY + 75, cx + 24, topY + 60);
+    ctx.bezierCurveTo(cx + 26, topY + 45, cx + 22, topY + 22, cx + 16, topY);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+// =====================================================
+//  Region dispatcher — calls the right anatomical drawer
 // =====================================================
 function drawRegion(ctx, key, opts = {}) {
   const r = REGIONS[key];
   if (!r) return;
   const t = opts.t || 0;
-  const active = opts.active || 0;  // 0..1 activation level
-  const highlight = opts.highlight || 0; // 0..1 hover highlight
-  const dim = opts.dim || 0; // 0..1 dim factor (used when others active)
-
-  const baseAlpha = 0.7 - dim * 0.5;
-  const glowAlpha = active > 0.05 ? (0.35 + active * 0.45) : (0.10 + highlight * 0.18);
-  const radius = r.r;
-  const pulseR = active > 0.05 ? radius + 6 + Math.sin(t / 220 + r.x * 0.01) * 4 : radius;
-
-  ctx.save();
-
-  // Outer glow halo
-  const halo = ctx.createRadialGradient(r.x, r.y, 0, r.x, r.y, radius * 2.4);
-  halo.addColorStop(0, rgba(r.color, glowAlpha));
-  halo.addColorStop(0.5, rgba(r.color, glowAlpha * 0.4));
-  halo.addColorStop(1, rgba(r.color, 0));
-  ctx.fillStyle = halo;
-  ctx.beginPath();
-  ctx.arc(r.x, r.y, radius * 2.4, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Active pulse ring
-  if (active > 0.05) {
-    ctx.strokeStyle = rgba(r.color, 0.55 + active * 0.25);
-    ctx.lineWidth = 1.8;
-    ctx.beginPath();
-    ctx.arc(r.x, r.y, pulseR + 2, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Concentric breathing pulse
-    const phase = (t / 600 + r.x * 0.005) % 1;
-    ctx.strokeStyle = rgba(r.color, (1 - phase) * 0.4 * active);
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.arc(r.x, r.y, radius + phase * 22, 0, Math.PI * 2);
-    ctx.stroke();
+  const active = opts.active || 0;
+  const highlight = opts.highlight || 0;
+  if (r.kind === 'lobe') {
+    drawLobeActivation(ctx, key, active, t, highlight);
+  } else if (r.kind === 'deep') {
+    const a = Math.max(active, (highlight || 0) * 0.4);
+    if (key === 'thalamus') drawThalamus(ctx, a, t);
+    else if (key === 'hypothalamus') drawHypothalamus(ctx, a, t);
+    else if (key === 'hippocampus') drawHippocampus(ctx, a, t);
+    else if (key === 'amygdala') drawAmygdala(ctx, a, t);
+    else if (key === 'accumbens') drawAccumbens(ctx, a, t);
+    else if (key === 'basalganglia') drawBasalGanglia(ctx, a, t);
+  } else if (r.kind === 'cerebellum') {
+    drawCerebellum(ctx, Math.max(active, (highlight || 0) * 0.4), t);
+  } else if (r.kind === 'brainstem') {
+    drawBrainStem(ctx, Math.max(active, (highlight || 0) * 0.4), t);
   }
-
-  // Core blob with gradient
-  const fillAlpha = baseAlpha + active * 0.3 + highlight * 0.2;
-  const core = ctx.createRadialGradient(r.x - radius * 0.3, r.y - radius * 0.3, 0, r.x, r.y, radius);
-  core.addColorStop(0, rgba('#ffffff', 0.4 + active * 0.4));
-  core.addColorStop(0.35, rgba(r.color, fillAlpha));
-  const [cr, cg, cb] = hexToRgb(r.color);
-  const dr = Math.max(0, cr - 80), dg = Math.max(0, cg - 80), db = Math.max(0, cb - 80);
-  core.addColorStop(1, `rgba(${dr},${dg},${db},${fillAlpha})`);
-  ctx.fillStyle = core;
-  ctx.beginPath();
-  ctx.arc(r.x, r.y, radius, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Rim
-  ctx.strokeStyle = rgba(r.color, 0.55 + active * 0.35);
-  ctx.lineWidth = 1.2 + active * 0.5;
-  ctx.stroke();
-
-  // Specular highlight
-  ctx.fillStyle = rgba('#ffffff', 0.25 + active * 0.2);
-  ctx.beginPath();
-  ctx.arc(r.x - radius * 0.35, r.y - radius * 0.35, radius * 0.22, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.restore();
 }
 
 // =====================================================
-//  Draw sensory input node
+//  Spinal cord — vertical tube descending from brain stem
 // =====================================================
-function drawInput(ctx, key, opts = {}) {
-  const n = INPUTS[key];
-  if (!n) return;
-  const t = opts.t || 0;
-  const active = opts.active || 0;
+function drawSpinalCord(ctx, activation, t) {
+  const n = OUTPUTS.spinal;
   ctx.save();
-
-  // Halo
-  const halo = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r * 2.4);
-  halo.addColorStop(0, rgba(n.color, 0.10 + active * 0.5));
-  halo.addColorStop(1, rgba(n.color, 0));
-  ctx.fillStyle = halo;
+  const sx = 885, sy = 552;
+  const ex = n.x, ey = n.y;
+  // tube
+  const grad = ctx.createLinearGradient(0, sy, 0, ey + 10);
+  grad.addColorStop(0, '#a06250');
+  grad.addColorStop(0.5, '#b8967f');
+  grad.addColorStop(1, '#7c4234');
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 22;
+  ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.arc(n.x, n.y, n.r * 2.4, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Body
-  const grad = ctx.createRadialGradient(n.x - 7, n.y - 7, 0, n.x, n.y, n.r);
-  grad.addColorStop(0, rgba('#ffffff', 0.6));
-  grad.addColorStop(0.4, rgba(n.color, 0.85));
-  const [r, g, b] = hexToRgb(n.color);
-  grad.addColorStop(1, `rgba(${Math.max(0,r-90)},${Math.max(0,g-90)},${Math.max(0,b-90)},0.95)`);
-  ctx.fillStyle = grad;
+  ctx.moveTo(sx, sy);
+  ctx.bezierCurveTo(sx + 30, sy + 10, ex - 90, ey - 8, ex, ey);
+  ctx.stroke();
+  // Inner highlight
+  ctx.strokeStyle = 'rgba(255, 220, 205, 0.30)';
+  ctx.lineWidth = 3.5;
   ctx.beginPath();
-  ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+  ctx.moveTo(sx, sy - 8);
+  ctx.bezierCurveTo(sx + 30, sy + 2, ex - 90, ey - 16, ex, ey - 7);
+  ctx.stroke();
+  // Vertebral disc hints — ticks across the cord
+  ctx.strokeStyle = 'rgba(60, 30, 22, 0.55)';
+  ctx.lineWidth = 1.4;
+  const segs = 7;
+  for (let i = 1; i < segs; i++) {
+    const tt = i / segs;
+    // approximate point along the bezier
+    const u = 1 - tt;
+    const c1x = sx + 30, c1y = sy + 10;
+    const c2x = ex - 90, c2y = ey - 8;
+    const px = u*u*u*sx + 3*u*u*tt*c1x + 3*u*tt*tt*c2x + tt*tt*tt*ex;
+    const py = u*u*u*sy + 3*u*u*tt*c1y + 3*u*tt*tt*c2y + tt*tt*tt*ey;
+    // tangent direction
+    const tanX = 3*u*u*(c1x - sx) + 6*u*tt*(c2x - c1x) + 3*tt*tt*(ex - c2x);
+    const tanY = 3*u*u*(c1y - sy) + 6*u*tt*(c2y - c1y) + 3*tt*tt*(ey - c2y);
+    const mag = Math.hypot(tanX, tanY);
+    const nx = -tanY / mag, ny = tanX / mag;
+    ctx.beginPath();
+    ctx.moveTo(px - nx * 12, py - ny * 12);
+    ctx.lineTo(px + nx * 12, py + ny * 12);
+    ctx.stroke();
+  }
+  // End cap bulb
+  const cap = ctx.createRadialGradient(ex - 6, ey - 6, 0, ex, ey, 22);
+  cap.addColorStop(0, '#f8d9ce');
+  cap.addColorStop(0.55, '#c8957f');
+  cap.addColorStop(1, '#7c4234');
+  ctx.fillStyle = cap;
+  ctx.beginPath();
+  ctx.arc(ex, ey, 20, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = rgba(n.color, 0.65);
+  ctx.strokeStyle = 'rgba(75, 35, 28, 0.55)';
   ctx.lineWidth = 1.3;
   ctx.stroke();
-
-  // Icon glyph
-  ctx.fillStyle = 'rgba(255,255,255,0.92)';
-  ctx.font = '700 14px -apple-system, system-ui';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  const glyph = { eye: '👁', ear: '👂', nose: '👃', skin: '✋' }[key] || '';
-  if (glyph) ctx.fillText(glyph, n.x, n.y);
-
-  // Label below
-  ctx.fillStyle = rgba(n.color, 0.95);
-  ctx.font = '600 12px -apple-system, system-ui';
-  ctx.fillText(n.label, n.x, n.y + n.r + 16);
-
-  // Active pulse ring
-  if (active > 0.05) {
-    const phase = (t / 480) % 1;
-    ctx.strokeStyle = rgba(n.color, (1 - phase) * 0.55 * active);
+  // Activation pulse
+  if (activation > 0.05) {
+    const halo = ctx.createRadialGradient(ex, ey, 0, ex, ey, 38);
+    halo.addColorStop(0, rgba(n.color, 0.45 * activation));
+    halo.addColorStop(1, rgba(n.color, 0));
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(ex, ey, 38, 0, Math.PI * 2);
+    ctx.fill();
+    const phase = ((t || 0) / 480) % 1;
+    ctx.strokeStyle = rgba(n.color, (1 - phase) * 0.55 * activation);
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.arc(n.x, n.y, n.r + phase * 22, 0, Math.PI * 2);
+    ctx.arc(ex, ey, 24 + phase * 18, 0, Math.PI * 2);
     ctx.stroke();
   }
-
-  ctx.restore();
-}
-
-// =====================================================
-//  Draw output node (muscle, gland, spinal cord, motor neuron)
-// =====================================================
-function drawOutput(ctx, key, opts = {}) {
-  const n = OUTPUTS[key];
-  if (!n) return;
-  const t = opts.t || 0;
-  const active = opts.active || 0;
-  ctx.save();
-
-  // Halo
-  const halo = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r * 2.4);
-  halo.addColorStop(0, rgba(n.color, 0.12 + active * 0.45));
-  halo.addColorStop(1, rgba(n.color, 0));
-  ctx.fillStyle = halo;
-  ctx.beginPath();
-  ctx.arc(n.x, n.y, n.r * 2.4, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Body
-  const grad = ctx.createRadialGradient(n.x - 6, n.y - 6, 0, n.x, n.y, n.r);
-  grad.addColorStop(0, rgba('#ffffff', 0.55));
-  grad.addColorStop(0.4, rgba(n.color, 0.85));
-  const [r, g, b] = hexToRgb(n.color);
-  grad.addColorStop(1, `rgba(${Math.max(0,r-90)},${Math.max(0,g-90)},${Math.max(0,b-90)},0.95)`);
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = rgba(n.color, 0.65);
-  ctx.lineWidth = 1.3;
-  ctx.stroke();
-
   // Label
   ctx.fillStyle = rgba(n.color, 0.95);
   ctx.font = '600 12px -apple-system, system-ui';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(n.label, n.x, n.y + n.r + 16);
+  ctx.fillText('Spinal Cord', ex, ey + 36);
+  ctx.restore();
+}
 
-  // Active pulse ring
+// =====================================================
+//  Sensory organs — anatomical illustrations
+// =====================================================
+function drawEye(ctx, opts = {}) {
+  const n = INPUTS.eye;
+  const t = opts.t || 0;
+  const active = opts.active || 0;
+  const cx = n.x, cy = n.y;
+  ctx.save();
   if (active > 0.05) {
-    const phase = (t / 420) % 1;
-    ctx.strokeStyle = rgba(n.color, (1 - phase) * 0.55 * active);
-    ctx.lineWidth = 1.5;
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, 60);
+    halo.addColorStop(0, rgba(n.color, 0.4 * active));
+    halo.addColorStop(1, rgba(n.color, 0));
+    ctx.fillStyle = halo;
+    ctx.beginPath(); ctx.arc(cx, cy, 60, 0, Math.PI * 2); ctx.fill();
+  }
+  // Eyelid arcs (subtle anatomical hint)
+  ctx.strokeStyle = 'rgba(155, 95, 80, 0.55)';
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(cx - 32, cy);
+  ctx.quadraticCurveTo(cx + 2, cy - 22, cx + 32, cy);
+  ctx.quadraticCurveTo(cx + 2, cy + 22, cx - 32, cy);
+  ctx.stroke();
+  // Sclera (white)
+  const sclera = ctx.createRadialGradient(cx - 5, cy - 4, 0, cx, cy, 30);
+  sclera.addColorStop(0, '#ffffff');
+  sclera.addColorStop(0.85, '#f0f4ff');
+  sclera.addColorStop(1, '#c7d2fe');
+  ctx.fillStyle = sclera;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, 30, 19, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(99, 102, 241, 0.45)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  // Iris
+  const iris = ctx.createRadialGradient(cx + 3, cy - 2, 0, cx + 6, cy, 13);
+  iris.addColorStop(0, '#c4b5fd');
+  iris.addColorStop(0.55, '#7c3aed');
+  iris.addColorStop(1, '#2e1065');
+  ctx.fillStyle = iris;
+  ctx.beginPath();
+  ctx.arc(cx + 6, cy, 12, 0, Math.PI * 2);
+  ctx.fill();
+  // Pupil
+  ctx.fillStyle = '#0a0a0a';
+  ctx.beginPath();
+  ctx.arc(cx + 6, cy, 5.5, 0, Math.PI * 2);
+  ctx.fill();
+  // Catchlight
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+  ctx.beginPath();
+  ctx.arc(cx + 3, cy - 2, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+  // Optic nerve exiting back of eye
+  ctx.strokeStyle = rgba(n.color, 0.7);
+  ctx.lineWidth = 7;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(cx + 24, cy + 4);
+  ctx.quadraticCurveTo(cx + 52, cy + 14, cx + 72, cy + 4);
+  ctx.stroke();
+  // Active signal pulse along optic nerve
+  if (active > 0.1) {
+    const ph = ((t || 0) / 380) % 1;
+    const px = cx + 24 + ph * 48;
+    const py = cy + 4 + Math.sin(ph * Math.PI) * 8;
+    const g = ctx.createRadialGradient(px, py, 0, px, py, 14);
+    g.addColorStop(0, 'rgba(255,255,255,0.9)');
+    g.addColorStop(0.4, rgba(n.color, 0.85));
+    g.addColorStop(1, rgba(n.color, 0));
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(px, py, 14, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.fillStyle = rgba(n.color, 0.95);
+  ctx.font = '600 12px -apple-system, system-ui';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Eye', cx, cy + 40);
+  ctx.restore();
+}
+
+function drawEar(ctx, opts = {}) {
+  const n = INPUTS.ear;
+  const t = opts.t || 0;
+  const active = opts.active || 0;
+  const cx = n.x, cy = n.y;
+  ctx.save();
+  if (active > 0.05) {
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, 55);
+    halo.addColorStop(0, rgba(n.color, 0.35 * active));
+    halo.addColorStop(1, rgba(n.color, 0));
+    ctx.fillStyle = halo;
+    ctx.beginPath(); ctx.arc(cx, cy, 55, 0, Math.PI * 2); ctx.fill();
+  }
+  // Outer ear shape (kidney-like with helix curl)
+  const earFill = ctx.createRadialGradient(cx - 6, cy - 8, 0, cx, cy, 32);
+  earFill.addColorStop(0, '#f8d9ce');
+  earFill.addColorStop(0.55, '#d49a8d');
+  earFill.addColorStop(1, '#8c4d3e');
+  ctx.fillStyle = earFill;
+  ctx.beginPath();
+  ctx.moveTo(cx - 2, cy - 26);
+  ctx.bezierCurveTo(cx + 20, cy - 28, cx + 28, cy - 5, cx + 22, cy + 14);
+  ctx.bezierCurveTo(cx + 16, cy + 28, cx + 4, cy + 30, cx - 8, cy + 24);
+  ctx.bezierCurveTo(cx - 20, cy + 16, cx - 26, cy + 0, cx - 22, cy - 14);
+  ctx.bezierCurveTo(cx - 18, cy - 24, cx - 10, cy - 27, cx - 2, cy - 26);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(115, 60, 48, 0.65)';
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+  // Inner helix curl
+  ctx.strokeStyle = 'rgba(115, 60, 48, 0.55)';
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - 18);
+  ctx.bezierCurveTo(cx + 14, cy - 18, cx + 18, cy - 4, cx + 16, cy + 6);
+  ctx.bezierCurveTo(cx + 12, cy + 16, cx + 2, cy + 18, cx - 4, cy + 14);
+  ctx.stroke();
+  // Tragus (small inner bump)
+  ctx.fillStyle = 'rgba(115, 60, 48, 0.5)';
+  ctx.beginPath();
+  ctx.ellipse(cx - 6, cy + 4, 4, 6, 0.1, 0, Math.PI * 2);
+  ctx.fill();
+  // Ear canal
+  ctx.fillStyle = 'rgba(40, 16, 12, 0.85)';
+  ctx.beginPath();
+  ctx.ellipse(cx + 4, cy + 2, 5, 7, -0.1, 0, Math.PI * 2);
+  ctx.fill();
+  // Sound wave arcs to the left (incoming sound)
+  if (active > 0.1) {
+    const ph = ((t || 0) / 500) % 1;
+    for (let i = 0; i < 3; i++) {
+      const a2 = (1 - ((ph + i * 0.33) % 1)) * 0.7 * active;
+      ctx.strokeStyle = rgba(n.color, a2);
+      ctx.lineWidth = 2;
+      const rad = 30 + ((ph + i * 0.33) % 1) * 24;
+      ctx.beginPath();
+      ctx.arc(cx - 22, cy, rad, -Math.PI * 0.35, Math.PI * 0.35);
+      ctx.stroke();
+    }
+  }
+  // Auditory nerve exiting back
+  ctx.strokeStyle = rgba(n.color, 0.7);
+  ctx.lineWidth = 6;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(cx + 24, cy + 5);
+  ctx.quadraticCurveTo(cx + 52, cy + 12, cx + 72, cy);
+  ctx.stroke();
+  if (active > 0.1) {
+    const ph = ((t || 0) / 380) % 1;
+    const px = cx + 24 + ph * 48;
+    const py = cy + 5 + Math.sin(ph * Math.PI) * 8;
+    const g = ctx.createRadialGradient(px, py, 0, px, py, 12);
+    g.addColorStop(0, 'rgba(255,255,255,0.9)');
+    g.addColorStop(0.4, rgba(n.color, 0.8));
+    g.addColorStop(1, rgba(n.color, 0));
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(px, py, 12, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.fillStyle = rgba(n.color, 0.95);
+  ctx.font = '600 12px -apple-system, system-ui';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Ear', cx, cy + 44);
+  ctx.restore();
+}
+
+function drawNose(ctx, opts = {}) {
+  const n = INPUTS.nose;
+  const t = opts.t || 0;
+  const active = opts.active || 0;
+  const cx = n.x, cy = n.y;
+  ctx.save();
+  if (active > 0.05) {
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, 55);
+    halo.addColorStop(0, rgba(n.color, 0.35 * active));
+    halo.addColorStop(1, rgba(n.color, 0));
+    ctx.fillStyle = halo;
+    ctx.beginPath(); ctx.arc(cx, cy, 55, 0, Math.PI * 2); ctx.fill();
+  }
+  // Side-view nose profile (facing right toward brain)
+  const noseFill = ctx.createRadialGradient(cx - 4, cy - 8, 0, cx, cy, 32);
+  noseFill.addColorStop(0, '#f8d9ce');
+  noseFill.addColorStop(0.55, '#d49a8d');
+  noseFill.addColorStop(1, '#8c4d3e');
+  ctx.fillStyle = noseFill;
+  ctx.beginPath();
+  // Bridge to tip
+  ctx.moveTo(cx - 16, cy - 26);
+  ctx.bezierCurveTo(cx - 8, cy - 28, cx + 4, cy - 20, cx + 14, cy - 6);   // bridge then tip
+  ctx.bezierCurveTo(cx + 18, cy + 4, cx + 18, cy + 12, cx + 12, cy + 16); // tip to under
+  ctx.bezierCurveTo(cx + 4, cy + 20, cx - 8, cy + 22, cx - 14, cy + 18);  // nostril region
+  ctx.bezierCurveTo(cx - 20, cy + 10, cx - 22, cy - 6, cx - 20, cy - 18); // back of nose
+  ctx.bezierCurveTo(cx - 20, cy - 24, cx - 18, cy - 26, cx - 16, cy - 26);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(115, 60, 48, 0.65)';
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+  // Nostril
+  ctx.fillStyle = 'rgba(40, 16, 12, 0.85)';
+  ctx.beginPath();
+  ctx.ellipse(cx + 2, cy + 12, 4.5, 2.8, -0.18, 0, Math.PI * 2);
+  ctx.fill();
+  // Olfactory bulb (small purple ellipse where nerve enters skull)
+  const bulb = ctx.createRadialGradient(cx + 12, cy - 18, 0, cx + 12, cy - 18, 11);
+  bulb.addColorStop(0, rgba(n.color, 0.95));
+  bulb.addColorStop(1, '#831843');
+  ctx.fillStyle = bulb;
+  ctx.beginPath();
+  ctx.ellipse(cx + 14, cy - 18, 10, 5.5, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = rgba(n.color, 0.85);
+  ctx.lineWidth = 1.1;
+  ctx.stroke();
+  // Olfactory nerve to brain
+  ctx.strokeStyle = rgba(n.color, 0.7);
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(cx + 24, cy - 18);
+  ctx.quadraticCurveTo(cx + 52, cy - 10, cx + 72, cy - 4);
+  ctx.stroke();
+  // Smell particles drifting toward nose when active
+  if (active > 0.1) {
+    for (let i = 0; i < 5; i++) {
+      const ph = ((t || 0) / 400 + i * 0.2) % 1;
+      const px = cx - 36 + ph * 24;
+      const py = cy - 10 + Math.sin(ph * Math.PI * 2 + i) * 4;
+      const a2 = (1 - Math.abs(ph - 0.5) * 2) * 0.7 * active;
+      ctx.fillStyle = rgba(n.color, a2);
+      ctx.beginPath();
+      ctx.arc(px, py, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.fillStyle = rgba(n.color, 0.95);
+  ctx.font = '600 12px -apple-system, system-ui';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Nose', cx, cy + 38);
+  ctx.restore();
+}
+
+function drawHand(ctx, opts = {}) {
+  const n = INPUTS.skin;
+  const t = opts.t || 0;
+  const active = opts.active || 0;
+  const cx = n.x, cy = n.y;
+  ctx.save();
+  if (active > 0.05) {
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, 60);
+    halo.addColorStop(0, rgba(n.color, 0.35 * active));
+    halo.addColorStop(1, rgba(n.color, 0));
+    ctx.fillStyle = halo;
+    ctx.beginPath(); ctx.arc(cx, cy, 60, 0, Math.PI * 2); ctx.fill();
+  }
+  // Hand silhouette: palm with extended index finger pointing right
+  const handFill = ctx.createRadialGradient(cx - 10, cy - 10, 0, cx, cy, 38);
+  handFill.addColorStop(0, '#f8d9ce');
+  handFill.addColorStop(0.5, '#d49a8d');
+  handFill.addColorStop(1, '#8c4d3e');
+  ctx.fillStyle = handFill;
+  ctx.strokeStyle = 'rgba(115, 60, 48, 0.6)';
+  ctx.lineWidth = 1.3;
+  // palm
+  ctx.beginPath();
+  ctx.ellipse(cx - 8, cy + 4, 18, 22, 0.05, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // thumb
+  ctx.beginPath();
+  ctx.ellipse(cx - 18, cy - 12, 6, 11, -0.55, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // index finger (extended right, pointing toward brain)
+  ctx.beginPath();
+  ctx.ellipse(cx + 10, cy - 9, 20, 7, 0.05, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // middle finger (shorter)
+  ctx.beginPath();
+  ctx.ellipse(cx + 4, cy + 1, 16, 6.5, 0.05, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // ring finger
+  ctx.beginPath();
+  ctx.ellipse(cx + 2, cy + 11, 14, 6, 0.08, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // little finger
+  ctx.beginPath();
+  ctx.ellipse(cx - 2, cy + 20, 11, 5, 0.1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // Fingertip touch sparkle when active
+  if (active > 0.1) {
+    const ph = ((t || 0) / 400) % 1;
+    const tipX = cx + 28;
+    const tipY = cy - 9;
+    const g = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, 16);
+    g.addColorStop(0, 'rgba(255,255,255,0.95)');
+    g.addColorStop(0.4, rgba(n.color, 0.85));
+    g.addColorStop(1, rgba(n.color, 0));
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(tipX, tipY, 12 + ph * 5, 0, Math.PI * 2); ctx.fill();
+  }
+  // Sensory nerve to brain (from wrist)
+  ctx.strokeStyle = rgba(n.color, 0.7);
+  ctx.lineWidth = 6;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(cx + 22, cy + 22);
+  ctx.quadraticCurveTo(cx + 50, cy + 20, cx + 72, cy + 14);
+  ctx.stroke();
+  ctx.fillStyle = rgba(n.color, 0.95);
+  ctx.font = '600 12px -apple-system, system-ui';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Skin / Touch', cx, cy + 50);
+  ctx.restore();
+}
+
+// =====================================================
+//  Body outputs — anatomical illustrations
+// =====================================================
+function drawMuscle(ctx, opts = {}) {
+  const n = OUTPUTS.muscle;
+  const t = opts.t || 0;
+  const active = opts.active || 0;
+  const cx = n.x, cy = n.y;
+  ctx.save();
+  if (active > 0.05) {
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, 70);
+    halo.addColorStop(0, rgba(n.color, 0.4 * active));
+    halo.addColorStop(1, rgba(n.color, 0));
+    ctx.fillStyle = halo;
+    ctx.beginPath(); ctx.arc(cx, cy, 70, 0, Math.PI * 2); ctx.fill();
+  }
+  // Muscle contraction when active (squash)
+  const flex = active > 0.1 ? Math.sin((t || 0) / 200) * 0.08 * active : 0;
+  // Muscle bundle — fusiform shape with diagonal striations
+  const fill = ctx.createRadialGradient(cx - 8, cy - 10, 0, cx, cy, 44);
+  fill.addColorStop(0, '#f8c9b8');
+  fill.addColorStop(0.5, '#ce6f5c');
+  fill.addColorStop(1, '#7a2e1e');
+  ctx.fillStyle = fill;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, 38 + flex * 16, 26 - flex * 14, -0.22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(95, 30, 22, 0.65)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  // Striations (diagonal fibers)
+  ctx.strokeStyle = 'rgba(95, 30, 22, 0.45)';
+  ctx.lineWidth = 1;
+  for (let i = -4; i <= 4; i++) {
+    const off = i * 6;
     ctx.beginPath();
-    ctx.arc(n.x, n.y, n.r + phase * 22, 0, Math.PI * 2);
+    ctx.moveTo(cx + off - 25, cy + 20);
+    ctx.lineTo(cx + off + 14, cy - 20);
     ctx.stroke();
   }
-
+  // Tendons (tapered ends)
+  ctx.fillStyle = '#d4b8a8';
+  ctx.beginPath();
+  ctx.ellipse(cx - 38, cy + 7, 10, 6, -0.22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(95, 30, 22, 0.45)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.fillStyle = '#d4b8a8';
+  ctx.ellipse(cx + 38, cy - 7, 10, 6, -0.22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  // Label
+  ctx.fillStyle = rgba(n.color, 0.95);
+  ctx.font = '600 12px -apple-system, system-ui';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Muscle', cx, cy + 46);
   ctx.restore();
+}
+
+function drawGland(ctx, opts = {}) {
+  const n = OUTPUTS.gland;
+  const t = opts.t || 0;
+  const active = opts.active || 0;
+  const cx = n.x, cy = n.y;
+  ctx.save();
+  if (active > 0.05) {
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, 55);
+    halo.addColorStop(0, rgba(n.color, 0.4 * active));
+    halo.addColorStop(1, rgba(n.color, 0));
+    ctx.fillStyle = halo;
+    ctx.beginPath(); ctx.arc(cx, cy, 55, 0, Math.PI * 2); ctx.fill();
+  }
+  // Adrenal gland — triangular cap shape
+  const fill = ctx.createRadialGradient(cx - 5, cy - 8, 0, cx, cy, 28);
+  fill.addColorStop(0, '#fed7aa');
+  fill.addColorStop(0.5, '#fb923c');
+  fill.addColorStop(1, '#7c2d12');
+  ctx.fillStyle = fill;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - 22);
+  ctx.bezierCurveTo(cx + 18, cy - 18, cx + 24, cy + 4, cx + 18, cy + 18);
+  ctx.bezierCurveTo(cx + 6, cy + 22, cx - 8, cy + 22, cx - 18, cy + 18);
+  ctx.bezierCurveTo(cx - 24, cy + 4, cx - 18, cy - 18, cx, cy - 22);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(110, 40, 12, 0.65)';
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+  // Cortex/medulla texture lines
+  ctx.strokeStyle = 'rgba(110, 40, 12, 0.45)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx - 12, cy - 4);
+  ctx.bezierCurveTo(cx - 4, cy + 1, cx + 4, cy + 1, cx + 12, cy - 4);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx - 14, cy - 12);
+  ctx.bezierCurveTo(cx - 4, cy - 8, cx + 4, cy - 8, cx + 14, cy - 12);
+  ctx.stroke();
+  // Hormone particles emitted when active
+  if (active > 0.1) {
+    for (let i = 0; i < 7; i++) {
+      const ph = ((t || 0) / 600 + i * 0.14) % 1;
+      const a2 = (1 - ph) * 0.7 * active;
+      const ang = i * 0.9;
+      const px = cx + Math.cos(ang) * (24 + ph * 22);
+      const py = cy + Math.sin(ang) * (22 + ph * 18);
+      ctx.fillStyle = rgba(n.color, a2);
+      ctx.beginPath();
+      ctx.arc(px, py, 2.6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.fillStyle = rgba(n.color, 0.95);
+  ctx.font = '600 12px -apple-system, system-ui';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Gland', cx, cy + 40);
+  ctx.restore();
+}
+
+function drawMotorNeuron(ctx, opts = {}) {
+  const n = OUTPUTS.motorNeuron;
+  const t = opts.t || 0;
+  const active = opts.active || 0;
+  const cx = n.x, cy = n.y;
+  ctx.save();
+  if (active > 0.05) {
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, 50);
+    halo.addColorStop(0, rgba(n.color, 0.4 * active));
+    halo.addColorStop(1, rgba(n.color, 0));
+    ctx.fillStyle = halo;
+    ctx.beginPath(); ctx.arc(cx, cy, 50, 0, Math.PI * 2); ctx.fill();
+  }
+  // Dendrites at top-left
+  ctx.strokeStyle = '#c78373';
+  ctx.lineWidth = 2.8;
+  ctx.lineCap = 'round';
+  for (let i = 0; i < 5; i++) {
+    const a = -Math.PI * 0.7 + i * 0.16;
+    const ex = cx + Math.cos(a) * 24;
+    const ey = cy + Math.sin(a) * 24;
+    ctx.beginPath();
+    ctx.moveTo(cx - 3, cy - 3);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+  }
+  // Soma (cell body)
+  const somaFill = ctx.createRadialGradient(cx - 5, cy - 5, 0, cx, cy, 16);
+  somaFill.addColorStop(0, '#f8d9ce');
+  somaFill.addColorStop(0.65, '#d49a8d');
+  somaFill.addColorStop(1, '#8c4d3e');
+  ctx.fillStyle = somaFill;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 15, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(115, 60, 48, 0.65)';
+  ctx.lineWidth = 1.3;
+  ctx.stroke();
+  // Nucleus
+  ctx.fillStyle = 'rgba(80, 40, 30, 0.85)';
+  ctx.beginPath();
+  ctx.arc(cx - 1, cy - 1, 5.5, 0, Math.PI * 2);
+  ctx.fill();
+  // Axon stretching to muscle
+  ctx.strokeStyle = '#c78373';
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  const tmx = OUTPUTS.muscle.x - 32;
+  const tmy = OUTPUTS.muscle.y + 12;
+  const ctrlX = cx + 60, ctrlY = cy - 60;
+  ctx.beginPath();
+  ctx.moveTo(cx + 12, cy - 2);
+  ctx.quadraticCurveTo(ctrlX, ctrlY, tmx, tmy);
+  ctx.stroke();
+  // Inner highlight on axon
+  ctx.strokeStyle = 'rgba(255, 220, 205, 0.30)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx + 12, cy - 4);
+  ctx.quadraticCurveTo(ctrlX, ctrlY - 3, tmx, tmy - 3);
+  ctx.stroke();
+  // Axon terminals branching to muscle
+  ctx.strokeStyle = '#c78373';
+  for (let i = 0; i < 4; i++) {
+    const a = -0.45 + i * 0.25;
+    const ex = tmx + Math.cos(a) * 16;
+    const ey = tmy + Math.sin(a) * 16;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(tmx, tmy);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+    ctx.fillStyle = '#d49a8d';
+    ctx.beginPath();
+    ctx.arc(ex, ey, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Active pulse along axon
+  if (active > 0.1) {
+    const ph = ((t || 0) / 350) % 1;
+    const u = 1 - ph;
+    const sx = cx + 12, sy = cy - 2;
+    const px = u * u * sx + 2 * u * ph * ctrlX + ph * ph * tmx;
+    const py = u * u * sy + 2 * u * ph * ctrlY + ph * ph * tmy;
+    const g = ctx.createRadialGradient(px, py, 0, px, py, 14);
+    g.addColorStop(0, 'rgba(255,255,255,0.92)');
+    g.addColorStop(0.4, rgba(n.color, 0.85));
+    g.addColorStop(1, rgba(n.color, 0));
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(px, py, 14, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.fillStyle = rgba(n.color, 0.95);
+  ctx.font = '600 12px -apple-system, system-ui';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Motor Neuron', cx, cy + 32);
+  ctx.restore();
+}
+
+// =====================================================
+//  Input / Output dispatchers
+// =====================================================
+function drawInput(ctx, key, opts = {}) {
+  if (key === 'eye') drawEye(ctx, opts);
+  else if (key === 'ear') drawEar(ctx, opts);
+  else if (key === 'nose') drawNose(ctx, opts);
+  else if (key === 'skin') drawHand(ctx, opts);
+}
+
+function drawOutput(ctx, key, opts = {}) {
+  if (key === 'spinal') drawSpinalCord(ctx, opts.active || 0, opts.t || 0);
+  else if (key === 'motorNeuron') drawMotorNeuron(ctx, opts);
+  else if (key === 'muscle') drawMuscle(ctx, opts);
+  else if (key === 'gland') drawGland(ctx, opts);
 }
 
 // =====================================================
@@ -926,32 +1868,12 @@ function drawRegionLabel(ctx, key, opts = {}) {
 }
 
 // =====================================================
-//  Draw the full base brain layout (background)
-//  - silhouette, optional regions, sensory inputs, outputs
+//  Base brain anatomy — drawn once per frame as the foundation.
+//  Cerebellum, brain stem, and spinal cord are drawn via drawAllNodes
+//  (their activation state is per-scene).
 // =====================================================
 function drawBrainBase(ctx, opts = {}) {
-  drawBrainSilhouette(ctx, { alpha: opts.silhouetteAlpha != null ? opts.silhouetteAlpha : 1 });
-  // Spinal cord extending from brain stem down/right
-  if (opts.showSpinal !== false) {
-    const bs = REGIONS.brainstem;
-    const sc = OUTPUTS.spinal;
-    ctx.save();
-    ctx.strokeStyle = rgba(C.spinal, 0.35);
-    ctx.lineWidth = 16;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(bs.x, bs.y);
-    ctx.bezierCurveTo(bs.x + 50, bs.y + 30, bs.x + 150, bs.y + 50, sc.x, sc.y);
-    ctx.stroke();
-    // Inner highlight
-    ctx.strokeStyle = rgba('#e2e8f0', 0.20);
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(bs.x, bs.y - 4);
-    ctx.bezierCurveTo(bs.x + 50, bs.y + 24, bs.x + 150, bs.y + 44, sc.x, sc.y - 4);
-    ctx.stroke();
-    ctx.restore();
-  }
+  drawCerebrumAnatomy(ctx, { alpha: opts.silhouetteAlpha != null ? opts.silhouetteAlpha : 1 });
 }
 
 // =====================================================
