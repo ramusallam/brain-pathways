@@ -2918,12 +2918,22 @@ function stepReset() {
 function refreshStepControls() {
   const nextBtn = document.getElementById('stepNextBtn');
   const counter = document.getElementById('stepCounter');
-  if (!nextBtn || !sceneLocal.nodes) return;
-  const total = sceneLocal.nodes.length - 1;
-  const isDone = sceneLocal.stepIdx >= total;
-  if (counter) counter.textContent = `${sceneLocal.stepIdx} / ${total}`;
-  nextBtn.disabled = isDone || sceneLocal.animating;
-  nextBtn.textContent = isDone ? '✓ Complete' : 'Next Step →';
+  if (nextBtn && sceneLocal.nodes) {
+    const total = sceneLocal.nodes.length - 1;
+    const isDone = sceneLocal.stepIdx >= total;
+    if (counter) counter.textContent = `${sceneLocal.stepIdx} / ${total}`;
+    nextBtn.disabled = isDone || sceneLocal.animating;
+    nextBtn.textContent = isDone ? '✓ Complete' : 'Next Step →';
+  }
+  // Keep the main Next-slide button in sync with sub-step progress.
+  if (typeof refreshNextButton === 'function') refreshNextButton();
+}
+
+// Shared canAdvance for every step-by-step scene — must reach the last
+// internal segment before students can move to the next slide.
+function stepCanAdvance() {
+  if (!sceneLocal.nodes) return true;
+  return sceneLocal.stepIdx >= sceneLocal.nodes.length - 1;
 }
 
 const STEP_CONTROLS_HTML = `<button class="chip" id="stepResetBtn">↺ Reset</button><div class="sim-readout">Segment <strong id="stepCounter">0 / 0</strong></div><button class="chip warm" id="stepNextBtn">Next Step →</button>`;
@@ -2966,6 +2976,7 @@ const sceneReflex = {
   },
   isInteractive: true,
   controlsHTML: STEP_CONTROLS_HTML,
+  canAdvance() { return stepCanAdvance(); },
   bindControls() { bindStepControls(); }
 };
 
@@ -3074,6 +3085,7 @@ const sceneFear = {
   },
   isInteractive: true,
   controlsHTML: STEP_CONTROLS_HTML,
+  canAdvance() { return stepCanAdvance(); },
   bindControls() { bindStepControls(); }
 };
 
@@ -3109,6 +3121,7 @@ const sceneSmellMemory = {
   },
   isInteractive: true,
   controlsHTML: STEP_CONTROLS_HTML,
+  canAdvance() { return stepCanAdvance(); },
   bindControls() { bindStepControls(); }
 };
 
@@ -3160,6 +3173,7 @@ const sceneMovement = {
   },
   isInteractive: true,
   controlsHTML: STEP_CONTROLS_HTML,
+  canAdvance() { return stepCanAdvance(); },
   bindControls() { bindStepControls(); }
 };
 
@@ -3198,6 +3212,7 @@ const sceneVision = {
   },
   isInteractive: true,
   controlsHTML: STEP_CONTROLS_HTML,
+  canAdvance() { return stepCanAdvance(); },
   bindControls() { bindStepControls(); }
 };
 
@@ -3302,6 +3317,7 @@ const sceneReward = {
   },
   isInteractive: true,
   controlsHTML: STEP_CONTROLS_HTML,
+  canAdvance() { return stepCanAdvance(); },
   bindControls() { bindStepControls(); }
 };
 
@@ -3351,6 +3367,7 @@ const sceneHijack = {
     drawResponseBadge(ctx, 1490, 240, resp, respLabel, sceneLocal.mode === 'hijack' ? '#f472b6' : '#ffd166');
   },
   isInteractive: true,
+  canAdvance() { return stepCanAdvance(); },
   controlsHTML: `<button class="chip" id="hijNormalBtn">Normal Reward</button><button class="chip active warm" id="hijHijackBtn">Hijacked Reward</button><span style="width:8px"></span>` + STEP_CONTROLS_HTML,
   bindControls() {
     const norm = document.getElementById('hijNormalBtn');
