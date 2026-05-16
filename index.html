@@ -212,61 +212,6 @@
   }
   .notebook-prompt strong { color: #ffd166; font-weight: 700; }
 
-  .student-notes {
-    margin-top: 10px;
-    background: rgba(99, 102, 241, 0.06);
-    border: 1px solid rgba(99, 102, 241, 0.25);
-    border-radius: 10px;
-    padding: 10px 14px;
-    display: none;
-  }
-  .student-notes.visible { display: block; }
-  .student-notes .sn-header {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    color: #c7d2fe;
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .student-notes textarea {
-    width: 100%;
-    min-height: 80px;
-    background: rgba(0,0,0,0.30);
-    border: 1px solid rgba(99,102,241,0.18);
-    border-radius: 8px;
-    padding: 10px 12px;
-    font-family: inherit;
-    font-size: 14px;
-    line-height: 1.5;
-    color: var(--ink-hi);
-    resize: vertical;
-    outline: none;
-  }
-  .student-notes textarea:focus { border-color: rgba(99,102,241,0.55); }
-  .student-notes .sn-clear {
-    font-size: 10px;
-    background: none;
-    border: none;
-    color: var(--ink-low);
-    cursor: pointer;
-    padding: 2px 6px;
-    border-radius: 4px;
-    letter-spacing: 1px;
-  }
-  .student-notes .sn-clear:hover { color: #f87171; }
-  .student-notes .sn-saved {
-    font-size: 10px;
-    color: #4ade80;
-    opacity: 0;
-    transition: opacity 200ms;
-    letter-spacing: 1px;
-  }
-  .student-notes .sn-saved.flash { opacity: 1; }
-
   nav {
     margin-top: 14px;
     display: flex;
@@ -331,13 +276,6 @@
     <div class="notebook-prompt" id="notebookPrompt">
       <div class="np-tag">✎ NOTES</div>
       <div id="notebookText"></div>
-    </div>
-    <div class="student-notes" id="studentNotes">
-      <div class="sn-header">
-        <span>Your Notes <span class="sn-saved" id="snSaved">SAVED</span></span>
-        <button class="sn-clear" id="snClear">CLEAR</button>
-      </div>
-      <textarea id="snTextarea" placeholder="Type your observations, predictions, or questions here. Saved to this browser automatically."></textarea>
     </div>
   </div>
 
@@ -3565,35 +3503,8 @@ const nextBtn = document.getElementById('nextBtn');
 const resetBtn = document.getElementById('resetBtn');
 const simControlsEl = document.getElementById('simControls');
 const pathwayKeyEl = document.getElementById('pathwayKey');
-const studentNotesEl = document.getElementById('studentNotes');
-const snTextarea = document.getElementById('snTextarea');
-const snSavedEl = document.getElementById('snSaved');
-const snClearBtn = document.getElementById('snClear');
 
 function pad2(n) { return n < 10 ? '0' + n : '' + n; }
-
-let saveTimeout = null;
-function loadNotes(sceneIdx) {
-  const key = 'brain-pathways-notes-' + sceneIdx;
-  return localStorage.getItem(key) || '';
-}
-function saveNotes(sceneIdx, text) {
-  const key = 'brain-pathways-notes-' + sceneIdx;
-  localStorage.setItem(key, text);
-  snSavedEl.classList.add('flash');
-  clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(() => snSavedEl.classList.remove('flash'), 900);
-}
-
-snTextarea.addEventListener('input', () => {
-  saveNotes(currentSceneIdx, snTextarea.value);
-});
-snClearBtn.addEventListener('click', () => {
-  if (confirm('Clear notes for this step?')) {
-    snTextarea.value = '';
-    saveNotes(currentSceneIdx, '');
-  }
-});
 
 function setScene(i) {
   currentSceneIdx = i;
@@ -3628,10 +3539,6 @@ function setScene(i) {
   } else {
     simControlsEl.classList.remove('visible');
   }
-
-  // Student notes show for every scene
-  studentNotesEl.classList.add('visible');
-  snTextarea.value = loadNotes(i);
 
   // Cursor for interactive scenes
   if (s.onMouseMove || s.onClick) canvas.classList.add('interactive');
