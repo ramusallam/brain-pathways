@@ -2734,43 +2734,119 @@ function drawAllNodes(ctx, t, activationMap, dimUnlit) {
 const sceneUniversalPathway = {
   phase: 'Step 3: The Standard Pathway',
   phaseColor: '#c7d2fe',
-  notes: "Every brain pathway follows the same overall shape: <strong>stimulus → sensor → thalamus (relay) → processing lobe → frontal lobe (decide) → response</strong>. The response leaves the brain through one of two routes. <strong>To a muscle</strong> (you move), or <strong>to a gland</strong> (you release a hormone). Use the buttons below to watch each ending.",
-  notebook: "Set up a tracker table in your notebook with these 4 columns: <strong>STIMULUS | SENSORY ORGAN | BRAIN REGIONS | RESPONSE</strong>. Leave room for at least 6 rows. We will add one row for every pathway in the next steps. For this scene, write the first row: <strong>Touch → Skin → Thalamus + Parietal + Frontal + Motor → Muscle (or Adrenal Gland)</strong>.",
-  pathwayKey: "Stimulus <span class='arrow'>→</span> Sensor <span class='arrow'>→</span> Thalamus (relay) <span class='arrow'>→</span> Cortex (process) <span class='arrow'>→</span> Frontal lobe (decide) <span class='arrow'>→</span> Motor cortex <span class='arrow'>→</span> Spinal cord <span class='arrow'>→</span> Motor neuron <span class='arrow'>→</span> Muscle &nbsp;|&nbsp; OR ending at: Hypothalamus <span class='arrow'>→</span> Adrenal gland",
+  notes: "Every pathway follows the same shape: <strong>stimulus → sensor → thalamus (relay) → processing lobe → frontal lobe (decide) → muscle (response)</strong>. But here is the key: <strong>each sense routes to a DIFFERENT processing lobe</strong>. Watch the simulation cycle through touch, hearing, vision, and smell. Notice which brain region lights up RIGHT BEFORE the frontal lobe. That tells you which lobe is the brain's specialist for that sense.",
+  notebook: "Set up your tracker table with 4 columns: <strong>STIMULUS | SENSORY ORGAN | BRAIN REGIONS | RESPONSE</strong>. Leave room for 6+ rows. Then answer this question by watching the cycle: <strong>Which brain region lights up BEFORE the frontal lobe for each sense? Touch → ?  Hearing → ?  Vision → ?  Smell → ?</strong> Write your four answers. (Hint: one of them skips the thalamus entirely.)",
+  pathwayKey: "Touch <span class='arrow'>→</span> Skin <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> <strong>Parietal lobe</strong> <span class='arrow'>→</span> Frontal <span class='arrow'>→</span> Muscle &nbsp;|&nbsp; Hearing <span class='arrow'>→</span> Ear <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> <strong>Temporal lobe</strong> <span class='arrow'>→</span> Frontal <span class='arrow'>→</span> Muscle &nbsp;|&nbsp; Vision <span class='arrow'>→</span> Eye <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> <strong>Occipital lobe</strong> <span class='arrow'>→</span> Frontal <span class='arrow'>→</span> Muscle &nbsp;|&nbsp; Smell <span class='arrow'>→</span> Nose <span class='arrow'>→</span> <strong>Hippocampus</strong> (skips thalamus) <span class='arrow'>→</span> Temporal <span class='arrow'>→</span> Frontal <span class='arrow'>→</span> Muscle",
   setup() {
     clearField();
     sceneLocal = {
-      mode: 'muscle',
-      muscleNodes: ['skin', 'thalamus', 'parietal', 'frontal', 'motor', 'spinal', 'motorNeuron', 'muscle'],
-      glandNodes: ['skin', 'thalamus', 'parietal', 'frontal', 'hypothalamus', 'gland']
+      cycleIdx: 0,
+      cycleT: 0,
+      paused: false,
+      pathways: [
+        { name: 'Touch',   color: '#fbbf24', sense: 'Touch (skin)',   nodes: ['skin','thalamus','parietal','frontal','motor','spinal','motorNeuron','muscle'] },
+        { name: 'Hearing', color: '#5eead4', sense: 'Hearing (ear)',  nodes: ['ear','thalamus','temporal','frontal','motor','spinal','motorNeuron','muscle'] },
+        { name: 'Vision',  color: '#a78bfa', sense: 'Vision (eye)',   nodes: ['eye','thalamus','occipital','frontal','motor','spinal','motorNeuron','muscle'] },
+        { name: 'Smell',   color: '#f472b6', sense: 'Smell (nose)',   nodes: ['nose','hippocampus','temporal','frontal','motor','spinal','motorNeuron','muscle'] },
+      ]
     };
   },
-  update(dt) {},
+  update(dt) {
+    if (sceneLocal.paused) return;
+    sceneLocal.cycleT += dt;
+    if (sceneLocal.cycleT > 5200) {
+      sceneLocal.cycleT = 0;
+      sceneLocal.cycleIdx = (sceneLocal.cycleIdx + 1) % sceneLocal.pathways.length;
+      if (typeof updateUpControls === 'function') updateUpControls();
+    }
+  },
   draw(ctx, t) {
     drawBrainBase(ctx, {});
-    const nodes = sceneLocal.mode === 'gland' ? sceneLocal.glandNodes : sceneLocal.muscleNodes;
-    const color = sceneLocal.mode === 'gland' ? '#fb923c' : '#c7d2fe';
-    const state = tracePathway(ctx, nodes, t, { color, speed: 0.00035 });
-    const map = getActivationMap(nodes, state);
+    const pw = sceneLocal.pathways[sceneLocal.cycleIdx];
+    const progress = sceneLocal.paused ? 1 : Math.min(1, sceneLocal.cycleT / 3800);
+    drawAnimatedSequence(ctx, pw.nodes, progress, pw.color, t);
+    const map = {};
+    const lit = Math.floor(progress * (pw.nodes.length - 1));
+    for (let i = 0; i <= lit; i++) map[pw.nodes[i]] = 1;
     drawAllNodes(ctx, t, map, true);
+
+    // Now watching panel — top right (compact)
     ctx.save();
-    ctx.font = '700 13px -apple-system, system-ui';
+    const panelX = 1120, panelY = 18, panelW = 460, panelH = 110;
+    ctx.shadowBlur = 22;
+    ctx.shadowColor = 'rgba(0,0,0,0.55)';
+    ctx.fillStyle = 'rgba(10, 12, 20, 0.92)';
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(panelX, panelY, panelW, panelH, 12); ctx.fill(); }
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = rgba(pw.color, 0.55);
+    ctx.lineWidth = 1.2;
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(panelX, panelY, panelW, panelH, 12); ctx.stroke(); }
+    ctx.font = '600 11px -apple-system, system-ui';
+    ctx.fillStyle = '#a0a0a0';
+    ctx.textAlign = 'left';
+    ctx.fillText('NOW WATCHING', panelX + 18, panelY + 22);
+    ctx.font = '700 22px -apple-system, system-ui';
+    ctx.fillStyle = pw.color;
+    ctx.fillText(pw.sense, panelX + 18, panelY + 50);
+    ctx.font = '600 12px -apple-system, system-ui';
+    ctx.fillStyle = '#e5e7eb';
+    ctx.fillText('Which lobe lights up RIGHT before the frontal lobe?', panelX + 18, panelY + 78);
+    ctx.font = '500 11px -apple-system, system-ui';
+    ctx.fillStyle = '#a0a0a0';
+    ctx.fillText('Watch the brain. Write your answer in your notes.', panelX + 18, panelY + 96);
+    ctx.restore();
+
+    // Sense roster on the left (cycle order)
+    ctx.save();
+    ctx.font = '600 12px -apple-system, system-ui';
+    ctx.fillStyle = '#a0a0a0';
+    ctx.textAlign = 'left';
+    ctx.fillText('CYCLING THROUGH THE SENSES:', 28, 28);
+    sceneLocal.pathways.forEach((p, i) => {
+      const y = 50 + i * 22;
+      const isActive = i === sceneLocal.cycleIdx;
+      ctx.fillStyle = isActive ? p.color : 'rgba(160,160,160,0.45)';
+      ctx.font = isActive ? '700 13px -apple-system, system-ui' : '500 12px -apple-system, system-ui';
+      ctx.fillText((isActive ? '▶ ' : '   ') + p.name, 28, y);
+    });
+    ctx.restore();
+
+    // Stage labels at very top
+    ctx.save();
+    ctx.font = '700 11px -apple-system, system-ui';
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#c7d2fe';
-    ctx.fillText('SENSORY INPUT', 150, 22);
-    ctx.fillText('PROCESSING', 740, 22);
-    ctx.fillText('OUTPUT / RESPONSE', 1380, 22);
+    ctx.fillStyle = 'rgba(199, 210, 254, 0.6)';
+    ctx.fillText('SENSORY INPUT', 145, 165);
+    ctx.fillText('RESPONSE', 1470, 320);
     ctx.restore();
   },
   isInteractive: true,
-  controlsHTML: `<button class="chip active" id="upMuscleBtn">→ Muscle (move)</button><button class="chip warm" id="upGlandBtn">→ Adrenal Gland (hormone)</button>`,
+  controlsHTML: `<button class="chip" data-up="0">Touch</button><button class="chip" data-up="1">Hearing</button><button class="chip" data-up="2">Vision</button><button class="chip" data-up="3">Smell</button><button class="chip warm" id="upPauseBtn">⏸ Pause</button>`,
   bindControls() {
-    const m = document.getElementById('upMuscleBtn');
-    const g = document.getElementById('upGlandBtn');
-    m.onclick = () => { sceneLocal.mode = 'muscle'; m.classList.add('active'); g.classList.remove('active'); };
-    g.onclick = () => { sceneLocal.mode = 'gland'; g.classList.add('active'); m.classList.remove('active'); };
+    const btns = document.querySelectorAll('[data-up]');
+    btns.forEach(b => {
+      b.onclick = () => {
+        sceneLocal.cycleIdx = parseInt(b.getAttribute('data-up'), 10);
+        sceneLocal.cycleT = 0;
+        updateUpControls();
+      };
+    });
+    const pauseBtn = document.getElementById('upPauseBtn');
+    pauseBtn.onclick = () => {
+      sceneLocal.paused = !sceneLocal.paused;
+      pauseBtn.textContent = sceneLocal.paused ? '▶ Play' : '⏸ Pause';
+      pauseBtn.classList.toggle('active', sceneLocal.paused);
+    };
+    window.updateUpControls = () => {
+      btns.forEach((b, i) => b.classList.toggle('active', i === sceneLocal.cycleIdx));
+    };
+    updateUpControls();
   }
 };
+
+function updateUpControls() {
+  if (window.updateUpControls) window.updateUpControls();
+}
 
 // =====================================================
 //  SCENE 4: The Reflex Arc
