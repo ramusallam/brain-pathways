@@ -1986,14 +1986,21 @@ const sceneIntro = {
   notebook: "Write the title <strong>Brain Pathways: From Stimulus to Response</strong>. Underneath, draw the chain: <strong>action potential → synapse → brain systems</strong>. Move through all three sub-phases (Neuron, Synapse, Brain) using the <strong>Next Phase →</strong> button before continuing.",
   setup() {
     clearField();
-    sceneLocal = { phaseIdx: 0, t: 0, bolt: 0, sparkles: [], fadeIn: 0 };
+    sceneLocal = { phaseIdx: 0, maxPhaseReached: 0, t: 0, bolt: 0, sparkles: [], fadeIn: 0 };
   },
   setPhase(i) {
     sceneLocal.phaseIdx = clamp(i, 0, 2);
+    if (sceneLocal.phaseIdx > (sceneLocal.maxPhaseReached || 0)) {
+      sceneLocal.maxPhaseReached = sceneLocal.phaseIdx;
+    }
     sceneLocal.t = 0;
     sceneLocal.bolt = 0;
     sceneLocal.fadeIn = 0;
     if (typeof updateIntroControls === 'function') updateIntroControls();
+    if (typeof refreshNextButton === 'function') refreshNextButton();
+  },
+  canAdvance() {
+    return (sceneLocal.maxPhaseReached || 0) >= 2;
   },
   update(dt) {
     sceneLocal.t += dt;
@@ -3506,6 +3513,25 @@ const pathwayKeyEl = document.getElementById('pathwayKey');
 
 function pad2(n) { return n < 10 ? '0' + n : '' + n; }
 
+// Next button is gated by the scene's canAdvance() if defined.
+// Scenes with internal sub-phases (e.g. the intro) use this to hold
+// the student until they've stepped through every sub-phase.
+function refreshNextButton() {
+  if (currentSceneIdx === scenes.length - 1) {
+    nextBtn.disabled = true;
+    nextBtn.title = '';
+    return;
+  }
+  const s = scenes[currentSceneIdx];
+  if (s.canAdvance && !s.canAdvance()) {
+    nextBtn.disabled = true;
+    nextBtn.title = 'Finish the sub-phases in this step before moving on';
+  } else {
+    nextBtn.disabled = false;
+    nextBtn.title = '';
+  }
+}
+
 function setScene(i) {
   currentSceneIdx = i;
   animT = 0;
@@ -3519,8 +3545,8 @@ function setScene(i) {
   notebookTextEl.innerHTML = s.notebook;
   stepIndicator.textContent = `${pad2(i + 1)} / ${pad2(scenes.length)}`;
   prevBtn.disabled = i === 0;
-  nextBtn.disabled = i === scenes.length - 1;
   nextBtn.textContent = i === scenes.length - 1 ? 'Done' : 'Next →';
+  refreshNextButton();
 
   // Pathway key reveal (controlled per scene or by Scenario Lab)
   if (s.pathwayKey) {
@@ -3550,7 +3576,7 @@ nextBtn.addEventListener('click', () => { if (currentSceneIdx < scenes.length - 
 resetBtn.addEventListener('click', () => setScene(0));
 document.addEventListener('keydown', (e) => {
   if (e.target && e.target.tagName === 'TEXTAREA') return;
-  if (e.key === 'ArrowRight' && currentSceneIdx < scenes.length - 1) setScene(currentSceneIdx + 1);
+  if (e.key === 'ArrowRight' && currentSceneIdx < scenes.length - 1 && !nextBtn.disabled) setScene(currentSceneIdx + 1);
   if (e.key === 'ArrowLeft' && currentSceneIdx > 0) setScene(currentSceneIdx - 1);
 });
 
