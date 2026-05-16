@@ -1926,8 +1926,11 @@ function drawAllLabels(ctx, activationMap) {
     const r = REGIONS[key];
     const layout = LABEL_LAYOUTS[key];
     if (!r || !layout) return;
-    const isActive = (activationMap[key] || 0) > 0.15;
-    drawPersistentLabel(ctx, r.label, layout.lx, layout.ly, r.x, r.y, r.color, isActive);
+    const activation = activationMap[key] || 0;
+    // Only show labels for regions actively part of the current pathway.
+    // Reduces cognitive load — keeps the brain quiet for non-involved regions.
+    if (activation < 0.15) return;
+    drawPersistentLabel(ctx, r.label, layout.lx, layout.ly, r.x, r.y, r.color, true);
   });
 }
 
@@ -2735,7 +2738,7 @@ const sceneUniversalPathway = {
   phase: 'Step 3: The Standard Pathway',
   phaseColor: '#c7d2fe',
   notes: "Every pathway follows the same shape: <strong>stimulus → sensor → thalamus (relay) → processing lobe → frontal lobe (decide) → muscle (response)</strong>. But here is the key: <strong>each sense routes to a DIFFERENT processing lobe</strong>. Watch the simulation cycle through touch, hearing, vision, and smell. Notice which brain region lights up RIGHT BEFORE the frontal lobe. That tells you which lobe is the brain's specialist for that sense.",
-  notebook: "Set up your tracker table with 4 columns: <strong>STIMULUS | SENSORY ORGAN | BRAIN REGIONS | RESPONSE</strong>. Leave room for 6+ rows. Then answer this question by watching the cycle: <strong>Which brain region lights up BEFORE the frontal lobe for each sense? Touch → ?  Hearing → ?  Vision → ?  Smell → ?</strong> Write your four answers. (Hint: one of them skips the thalamus entirely.)",
+  notebook: "Watch the cycle. For each sense, write down the brain region that lights up <strong>RIGHT BEFORE the frontal lobe</strong>:<br>• Touch → ___<br>• Hearing → ___<br>• Vision → ___<br>• Smell → ___<br>Then write one sentence: <strong>Each sense has its own processing lobe.</strong> One sense skips the thalamus entirely — which one?",
   pathwayKey: "Touch <span class='arrow'>→</span> Skin <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> <strong>Parietal lobe</strong> <span class='arrow'>→</span> Frontal <span class='arrow'>→</span> Muscle &nbsp;|&nbsp; Hearing <span class='arrow'>→</span> Ear <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> <strong>Temporal lobe</strong> <span class='arrow'>→</span> Frontal <span class='arrow'>→</span> Muscle &nbsp;|&nbsp; Vision <span class='arrow'>→</span> Eye <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> <strong>Occipital lobe</strong> <span class='arrow'>→</span> Frontal <span class='arrow'>→</span> Muscle &nbsp;|&nbsp; Smell <span class='arrow'>→</span> Nose <span class='arrow'>→</span> <strong>Hippocampus</strong> (skips thalamus) <span class='arrow'>→</span> Temporal <span class='arrow'>→</span> Frontal <span class='arrow'>→</span> Muscle",
   setup() {
     clearField();
@@ -2754,7 +2757,7 @@ const sceneUniversalPathway = {
   update(dt) {
     if (sceneLocal.paused) return;
     sceneLocal.cycleT += dt;
-    if (sceneLocal.cycleT > 5200) {
+    if (sceneLocal.cycleT > 9000) {
       sceneLocal.cycleT = 0;
       sceneLocal.cycleIdx = (sceneLocal.cycleIdx + 1) % sceneLocal.pathways.length;
       if (typeof updateUpControls === 'function') updateUpControls();
@@ -2763,7 +2766,7 @@ const sceneUniversalPathway = {
   draw(ctx, t) {
     drawBrainBase(ctx, {});
     const pw = sceneLocal.pathways[sceneLocal.cycleIdx];
-    const progress = sceneLocal.paused ? 1 : Math.min(1, sceneLocal.cycleT / 3800);
+    const progress = sceneLocal.paused ? 1 : Math.min(1, sceneLocal.cycleT / 7000);
     drawAnimatedSequence(ctx, pw.nodes, progress, pw.color, t);
     const map = {};
     const lit = Math.floor(progress * (pw.nodes.length - 1));
@@ -2855,7 +2858,7 @@ const sceneReflex = {
   phase: 'Step 4: The Reflex Arc (Touch + Pain Shortcut)',
   phaseColor: C.skin,
   notes: "Special case: a reflex arc <strong>skips the brain</strong>. You touch a hot stove (or step on a sharp object). <strong>Pain and touch receptors in the skin</strong> fire a signal up the <strong>sensory neuron</strong> to the <strong>spinal cord</strong>, which fires an instant motor command BACK DOWN through a <strong>motor neuron</strong> to the muscle. Your hand (or foot) pulls away BEFORE the pain reaches conscious awareness. The pain signal continues up to the brain: <strong>thalamus → parietal lobe → frontal lobe</strong>, so you feel it a moment later. The parietal lobe is the brain's <strong>touch and pain processor</strong>. <strong>Reflexes save you because they skip the cortex.</strong>",
-  notebook: "Add a row to your tracker: <strong>STIMULUS</strong> = heat or sharp object, <strong>SENSORY MODALITY</strong> = touch + pain (skin receptors → sensory neuron), <strong>BRAIN REGIONS</strong> = spinal cord (reflex); then thalamus → parietal → frontal (conscious pain), <strong>RESPONSE</strong> = muscle pulls hand or foot away. Write the rule: <strong>reflex arc = spinal cord shortcut. Parietal lobe = touch + pain.</strong>",
+  notebook: "Write this flow in your notes:<br><strong>Heat → skin receptors → sensory neuron → spinal cord (REFLEX) → motor neuron → muscle pulls away</strong><br>Then one sentence: <strong>The spinal cord fires the response before the brain even knows. Pain reaches the parietal lobe a moment later.</strong>",
   pathwayKey: "Heat or sharp object <span class='arrow'>→</span> Skin receptors <span class='arrow'>→</span> Sensory neuron <span class='arrow'>→</span> Spinal cord (REFLEX) <span class='arrow'>→</span> Motor neuron <span class='arrow'>→</span> Muscle pulls away &nbsp;|&nbsp; then pain signal continues: Spinal <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Parietal lobe <span class='arrow'>→</span> Frontal lobe (you feel it)",
   setup() {
     clearField();
@@ -2867,7 +2870,7 @@ const sceneReflex = {
   update(dt) { sceneLocal.t += dt; },
   draw(ctx, t) {
     drawBrainBase(ctx, {});
-    const state = tracePathway(ctx, sceneLocal.nodes, t, { color: '#ff6b6b', speed: 0.00045 });
+    const state = tracePathway(ctx, sceneLocal.nodes, t, { color: '#ff6b6b', speed: 0.00022 });
     const map = getActivationMap(sceneLocal.nodes, state);
     drawAllNodes(ctx, t, map, true);
 
@@ -2965,7 +2968,7 @@ const sceneFear = {
   phase: 'Step 5: Fear Pathway (Hearing)',
   phaseColor: C.amygdala,
   notes: "A loud crash behind you. Your heart pounds, your body tenses, you turn around. The brain has a <strong>fear shortcut</strong>. Sound enters the <strong>ear</strong>, travels up the <strong>auditory nerve</strong> to the <strong>thalamus</strong>, and the thalamus sends a fast warning straight to the <strong>amygdala</strong> — the brain's <strong>fear alarm</strong>. The amygdala fires the <strong>hypothalamus</strong>, which activates the <strong>brain stem</strong> and the <strong>adrenal gland</strong> (adrenaline). Heart rate up. To turn your body, the signal also fires through the <strong>motor cortex → spinal cord → muscles</strong>. The <strong>temporal lobe</strong> (hearing + language) catches up so you can identify what you heard.",
-  notebook: "Add a row to your tracker: <strong>STIMULUS</strong> = loud crash, <strong>SENSORY MODALITY</strong> = hearing (ear → auditory nerve), <strong>BRAIN REGIONS</strong> = thalamus → temporal lobe → amygdala → hypothalamus → brain stem, <strong>RESPONSE</strong> = adrenal gland (adrenaline) + motor cortex → spinal cord → muscles turn body. Write the rules: <strong>auditory nerve carries sound. Amygdala = fear alarm. Temporal lobe = hearing.</strong>",
+  notebook: "Write this flow in your notes:<br><strong>Sound → ear → auditory nerve → thalamus → amygdala → hypothalamus → adrenal gland (adrenaline)</strong><br>Then one sentence: <strong>The amygdala is the brain's fear alarm — it fires the body's stress response before you even know what happened.</strong>",
   pathwayKey: "Loud crash <span class='arrow'>→</span> Ear <span class='arrow'>→</span> Auditory nerve <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Temporal lobe <span class='arrow'>→</span> Amygdala <span class='arrow'>→</span> Hypothalamus <span class='arrow'>→</span> Brain stem + Adrenal gland (adrenaline) + Motor cortex <span class='arrow'>→</span> Spinal cord <span class='arrow'>→</span> Muscles turn the body",
   setup() {
     clearField();
@@ -2977,7 +2980,7 @@ const sceneFear = {
   update(dt) { sceneLocal.t += dt; },
   draw(ctx, t) {
     drawBrainBase(ctx, {});
-    const state = tracePathway(ctx, sceneLocal.nodes, t, { color: '#f87171', speed: 0.00045 });
+    const state = tracePathway(ctx, sceneLocal.nodes, t, { color: '#f87171', speed: 0.00022 });
     const map = getActivationMap(sceneLocal.nodes, state);
     drawAllNodes(ctx, t, map, true);
 
@@ -3002,7 +3005,7 @@ const sceneSmellMemory = {
   phase: 'Step 6: Memory Pathway (Smell)',
   phaseColor: C.nose,
   notes: "You smell cookies. Suddenly you remember your grandma's kitchen. Why is smell so emotional? <strong>Smell is the only sense that does NOT route through the thalamus first.</strong> Smell molecules trigger <strong>olfactory receptors</strong> in the nose, which fire signals through the <strong>olfactory bulb</strong> straight into the <strong>limbic system</strong>: the <strong>hippocampus</strong> (memory formation and retrieval), the <strong>amygdala</strong> (emotion), and on to the <strong>frontal lobe</strong>. The <strong>temporal lobe</strong> (hearing, language, memory storage) then helps you put words to the memory. That direct route is why a smell can trigger a powerful memory before you can name what you smelled.",
-  notebook: "Add a row to your tracker: <strong>STIMULUS</strong> = smell of cookies, <strong>SENSORY MODALITY</strong> = smell / olfactory (olfactory receptors → olfactory bulb), <strong>BRAIN REGIONS</strong> = hippocampus → amygdala → frontal lobe (skips thalamus), <strong>RESPONSE</strong> = emotional memory returns. Star this row and write: <strong>smell skips the thalamus. Olfactory bulb feeds the limbic system. Hippocampus = memory.</strong>",
+  notebook: "Write this flow in your notes:<br><strong>Smell → olfactory receptors → olfactory bulb → hippocampus + amygdala → frontal lobe</strong><br>Then one sentence: <strong>Smell is the only sense that skips the thalamus — it goes straight to memory and emotion.</strong>",
   pathwayKey: "Smell <span class='arrow'>→</span> Olfactory receptors (nose) <span class='arrow'>→</span> Olfactory bulb <span class='arrow'>→</span> Hippocampus (memory) + Amygdala (emotion) <span class='arrow'>→</span> Frontal lobe (you name it). Smell is special — it skips the thalamus and goes straight to the limbic system.",
   setup() {
     clearField();
@@ -3014,7 +3017,7 @@ const sceneSmellMemory = {
   update(dt) { sceneLocal.t += dt; },
   draw(ctx, t) {
     drawBrainBase(ctx, {});
-    const state = tracePathway(ctx, sceneLocal.nodes, t, { color: '#ffd166', speed: 0.00040 });
+    const state = tracePathway(ctx, sceneLocal.nodes, t, { color: '#ffd166', speed: 0.00020 });
     const map = getActivationMap(sceneLocal.nodes, state);
     drawAllNodes(ctx, t, map, true);
 
@@ -3039,7 +3042,7 @@ const sceneMovement = {
   phase: 'Step 9: Motor Coordination (Movement + Balance)',
   phaseColor: C.cerebellum,
   notes: "You ride a bike without thinking. Three systems coordinate every movement. The <strong>motor cortex</strong> sends commands, the <strong>basal ganglia</strong> select and chain learned movement patterns, and the <strong>cerebellum</strong> fine-tunes <strong>balance, timing, and precision</strong> using continuous feedback from the body. The signal leaves through the <strong>spinal cord</strong> to the <strong>motor neurons</strong> and on to the <strong>muscles</strong>. The cerebellum gets <strong>proprioceptive feedback</strong> (where your body is in space) so it can adjust on the fly.",
-  notebook: "Add a row: <strong>STIMULUS</strong> = decide to ride a bike, <strong>SENSORY MODALITY</strong> = proprioception + balance (body position and motion), <strong>BRAIN REGIONS</strong> = frontal lobe → basal ganglia → motor cortex → cerebellum, <strong>RESPONSE</strong> = muscles pedal + balance. Write the rules: <strong>cerebellum = balance and timing. Basal ganglia = action selection. Motor cortex = movement command.</strong>",
+  notebook: "Write this flow in your notes:<br><strong>Decide to move → frontal lobe → basal ganglia → motor cortex → cerebellum → spinal cord → motor neuron → muscle</strong><br>Then one sentence: <strong>The cerebellum handles balance and timing. Three regions team up to coordinate movement.</strong>",
   pathwayKey: "Decide to ride <span class='arrow'>→</span> Frontal lobe (plan) <span class='arrow'>→</span> Basal ganglia (action selection) <span class='arrow'>→</span> Motor cortex (command) <span class='arrow'>→</span> Cerebellum (fine-tune balance + timing) <span class='arrow'>→</span> Spinal cord <span class='arrow'>→</span> Motor neuron <span class='arrow'>→</span> Muscle",
   setup() {
     clearField();
@@ -3051,7 +3054,7 @@ const sceneMovement = {
   update(dt) { sceneLocal.t += dt; },
   draw(ctx, t) {
     drawBrainBase(ctx, {});
-    const state = tracePathway(ctx, sceneLocal.nodes, t, { color: '#4ade80', speed: 0.0004 });
+    const state = tracePathway(ctx, sceneLocal.nodes, t, { color: '#4ade80', speed: 0.00020 });
     const map = getActivationMap(sceneLocal.nodes, state);
     drawAllNodes(ctx, t, map, true);
 
@@ -3083,7 +3086,7 @@ const sceneVision = {
   phase: 'Step 10: Vision Deep Dive',
   phaseColor: C.occipital,
   notes: "Light bounces off the world, passes through the <strong>cornea and lens</strong>, and lands on the <strong>retina</strong>, a layer of light-sensitive cells at the back of the eye. The retina converts light into neural signals, which travel along the <strong>optic nerve</strong> to the <strong>thalamus</strong>, then to the <strong>occipital lobe</strong>, the brain's <strong>vision processor</strong>. The <strong>parietal and frontal lobes</strong> interpret context and patterns — sometimes incorrectly (optical illusions). The <strong>parietal lobe</strong> places the image in space (spatial awareness). <strong>The eye detects information, but the brain constructs perception.</strong>",
-  notebook: "Add a row: <strong>STIMULUS</strong> = light, <strong>SENSORY MODALITY</strong> = vision (eye → retina), <strong>BRAIN REGIONS</strong> = thalamus → occipital lobe → parietal lobe → frontal lobe, <strong>RESPONSE</strong> = you see and recognize. Write the rules: <strong>occipital lobe = vision. Parietal lobe = spatial awareness.</strong> You will dissect a real eye soon — sketch the eye structure too: cornea → lens → retina → optic nerve.",
+  notebook: "Write this flow in your notes:<br><strong>Light → cornea + lens → retina → optic nerve → thalamus → occipital lobe → parietal + frontal lobes</strong><br>Then one sentence: <strong>The eye detects, but the brain constructs perception.</strong> Sketch the eye too — you will dissect a real one soon.",
   pathwayKey: "Light <span class='arrow'>→</span> Cornea + lens <span class='arrow'>→</span> Retina <span class='arrow'>→</span> Optic nerve <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Occipital lobe (builds image) <span class='arrow'>→</span> Parietal lobe (places it in space) <span class='arrow'>→</span> Frontal lobe (you recognize it)",
   setup() {
     clearField();
@@ -3097,7 +3100,7 @@ const sceneVision = {
     drawBrainBase(ctx, {});
     // Eye diagram overlay (top-left)
     drawEyeDiagram(ctx, 100, 130, t);
-    const state = tracePathway(ctx, sceneLocal.nodes, t, { color: C.occipital, speed: 0.0004 });
+    const state = tracePathway(ctx, sceneLocal.nodes, t, { color: C.occipital, speed: 0.00020 });
     const map = getActivationMap(sceneLocal.nodes, state);
     drawAllNodes(ctx, t, map, true);
     // Optical illusion mini-card top-right
@@ -3192,7 +3195,7 @@ const sceneReward = {
   phase: 'Step 7: Reward Pathway',
   phaseColor: C.accumbens,
   notes: "You eat your favorite dessert. You win the big game. Your phone buzzes with a notification. All three light up the same pathway. <strong>Dopamine</strong> released into the <strong>nucleus accumbens</strong> tells the brain <strong>this is worth doing again</strong>. The <strong>frontal lobe</strong> tracks the outcome. The <strong>hippocampus</strong> remembers the cue. Reward is normal and important — it is how you learn what to pursue.",
-  notebook: "Add a row: <strong>STIMULUS</strong> = a reward cue (winning, food, praise), <strong>SENSORY MODALITY</strong> = depends (vision, taste, hearing), <strong>BRAIN REGIONS</strong> = nucleus accumbens (dopamine) → frontal lobe + hippocampus, <strong>RESPONSE</strong> = pleasure + motivation to do it again. Write the rule: <strong>nucleus accumbens = reward and motivation. Dopamine = do that again.</strong>",
+  notebook: "Write this flow in your notes:<br><strong>Reward cue → thalamus → nucleus accumbens (dopamine) → frontal lobe + hippocampus</strong><br>Then one sentence: <strong>Dopamine in the nucleus accumbens says \"do that again\" — it is how the brain learns what to pursue.</strong>",
   pathwayKey: "Reward cue <span class='arrow'>→</span> Eye / sensory input <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Nucleus accumbens (dopamine release) <span class='arrow'>→</span> Frontal lobe (motivation) + Hippocampus (remember the cue)",
   setup() {
     clearField();
@@ -3209,10 +3212,10 @@ const sceneReward = {
   update(dt) { sceneLocal.t += dt; },
   draw(ctx, t) {
     drawBrainBase(ctx, {});
-    const cycle = 4400;
+    const cycle = 7500;
     const ct = sceneLocal.t % cycle;
-    const mT = Math.min(1, ct / 2400);
-    const bT = ct > 1800 ? Math.min(1, (ct - 1800) / 2400) : 0;
+    const mT = Math.min(1, ct / 4200);
+    const bT = ct > 3000 ? Math.min(1, (ct - 3000) / 4000) : 0;
 
     drawAnimatedSequence(ctx, sceneLocal.mainNodes, mT, C.accumbens, t);
     sceneLocal.branches.forEach((br, i) => {
@@ -3248,7 +3251,7 @@ const sceneHijack = {
   phase: 'Step 8: Reward Hijacking (Addiction Case Study)',
   phaseColor: '#f472b6',
   notes: "Some stimuli activate the reward pathway much more strongly than natural rewards: <strong>addictive drugs, certain foods, gambling, phone notifications</strong>. Picture a person with addiction seeing a needle: light enters the <strong>eye</strong>, travels the <strong>optic nerve</strong> through the <strong>thalamus</strong> to the <strong>occipital lobe</strong> (vision). The <strong>hippocampus</strong> retrieves drug-related memories, the <strong>amygdala</strong> tags the cue with emotional urgency, the <strong>nucleus accumbens</strong> activates and floods the brain with <strong>dopamine</strong> (expectation of reward), and the <strong>hypothalamus</strong> drives bodily craving. The <strong>frontal lobe</strong> struggles with <strong>impulse control</strong> against the pull. This is not moral failure — it is the brain strengthening pathways that fire together. <strong>Because the brain can change, recovery and rewiring are real.</strong>",
-  notebook: "Add a row: <strong>STIMULUS</strong> = addictive cue (needle, notification), <strong>SENSORY MODALITY</strong> = vision (eye → optic nerve), <strong>BRAIN REGIONS</strong> = thalamus → occipital → hippocampus (drug memories) + amygdala (urgency) + nucleus accumbens (dopamine) + hypothalamus (craving) + frontal lobe (impulse control challenged), <strong>RESPONSE</strong> = craving + drug-seeking behavior. Write the rules: <strong>cues + memory = craving. Frontal lobe = impulse control. Neuroplasticity means change is possible.</strong>",
+  notebook: "Write this flow in your notes:<br><strong>Drug cue → eye → optic nerve → thalamus → occipital → hippocampus (memories) + amygdala (urgency) → nucleus accumbens (BIG dopamine) → hypothalamus (craving) → frontal lobe struggles with impulse control</strong><br>Then one sentence: <strong>Addiction strengthens the cue → craving pathway. Because the brain can change, recovery is possible.</strong>",
   pathwayKey: "Cue (notification / drug / image) <span class='arrow'>→</span> Sensory input <span class='arrow'>→</span> Nucleus accumbens (BIG dopamine) <span class='arrow'>→</span> Hippocampus (cue memory) + Amygdala (urgency) + Hypothalamus (craving) <span class='arrow'>→</span> Frontal lobe inhibition challenged",
   setup() {
     clearField();
@@ -3269,16 +3272,16 @@ const sceneHijack = {
   },
   update(dt) {
     sceneLocal.t += dt;
-    const cycle = 3200;
+    const cycle = 6000;
     if (sceneLocal.t > cycle * (sceneLocal.reps + 1)) {
       sceneLocal.reps = Math.floor(sceneLocal.t / cycle);
     }
   },
   draw(ctx, t) {
     drawBrainBase(ctx, {});
-    const ct = sceneLocal.t % 3200;
-    const mainT = Math.min(1, ct / 1800);
-    const branchT = ct > 1200 ? Math.min(1, (ct - 1200) / 2000) : 0;
+    const ct = sceneLocal.t % 6000;
+    const mainT = Math.min(1, ct / 3200);
+    const branchT = ct > 2200 ? Math.min(1, (ct - 2200) / 3400) : 0;
 
     const nodes = sceneLocal.mode === 'hijack' ? sceneLocal.hijackNodes : sceneLocal.normalNodes;
     const intensity = sceneLocal.mode === 'hijack' ? 1 : 0.55;
@@ -3287,8 +3290,8 @@ const sceneHijack = {
 
     if (sceneLocal.mode === 'hijack') {
       sceneLocal.branches.forEach((br, i) => {
-        const delay = i * 180;
-        const t2 = ct > 1200 + delay ? Math.min(1, (ct - 1200 - delay) / 1800) : 0;
+        const delay = i * 300;
+        const t2 = ct > 2200 + delay ? Math.min(1, (ct - 2200 - delay) / 3000) : 0;
         if (t2 > 0) drawAnimatedSequence(ctx, br, t2, '#f472b6', t);
       });
     }
@@ -3419,10 +3422,10 @@ const sceneScenarioLab = {
     drawBrainBase(ctx, {});
     const scn = SCENARIOS.find(s => s.id === sceneLocal.currentId);
     if (!scn) return;
-    const cycle = 4400;
+    const cycle = 7500;
     const ct = sceneLocal.t % cycle;
-    const mainT = Math.min(1, ct / 2200);
-    const extraT = scn.extra && ct > 1200 ? Math.min(1, (ct - 1200) / 2400) : 0;
+    const mainT = Math.min(1, ct / 4200);
+    const extraT = scn.extra && ct > 2400 ? Math.min(1, (ct - 2400) / 4200) : 0;
 
     drawAnimatedSequence(ctx, scn.nodes, mainT, scn.color, t);
     if (scn.extra && extraT > 0) drawAnimatedSequence(ctx, scn.extra, extraT, '#c7d2fe', t);
