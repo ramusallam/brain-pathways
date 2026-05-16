@@ -1996,6 +1996,7 @@ const sceneIntro = {
     sceneLocal.t = 0;
     sceneLocal.bolt = 0;
     sceneLocal.fadeIn = 0;
+    sceneLocal.flyingPulses = [];
     if (typeof updateIntroControls === 'function') updateIntroControls();
     if (typeof refreshNextButton === 'function') refreshNextButton();
   },
@@ -2064,7 +2065,7 @@ const sceneIntro = {
       ctx.fillText('neurotransmitters bridge the gap', W/2, 140);
       ctx.restore();
     } else {
-      // Phase 3: full brain reveal
+      // Phase 3: full brain reveal with signals flying from every sense
       ctx.save();
       ctx.globalAlpha = fade;
       drawBrainBase(ctx, { silhouetteAlpha: fade });
@@ -2075,22 +2076,67 @@ const sceneIntro = {
       });
       Object.keys(INPUTS).forEach((k, i) => {
         const phaseOffset = (Math.sin(t / 600 + i) + 1) * 0.5;
-        drawInput(ctx, k, { t, active: 0.2 + phaseOffset * 0.30 });
+        drawInput(ctx, k, { t, active: 0.45 + phaseOffset * 0.30 });
       });
       Object.keys(OUTPUTS).forEach((k, i) => {
         const phaseOffset = (Math.sin(t / 700 + i + 2) + 1) * 0.5;
         drawOutput(ctx, k, { t, active: 0.2 + phaseOffset * 0.30 });
       });
+      // Animated flying signals — each sense fires pulses to multiple brain regions
+      if (!sceneLocal.flyingPulses) sceneLocal.flyingPulses = [];
+      // spawn new pulses
+      if (Math.random() < 0.18) {
+        const sensors = Object.keys(INPUTS);
+        const targets = ['thalamus','amygdala','hippocampus','frontal','parietal','occipital','temporal','accumbens','cerebellum','motor','basalganglia','hypothalamus'];
+        const sensor = sensors[Math.floor(Math.random() * sensors.length)];
+        const target = targets[Math.floor(Math.random() * targets.length)];
+        sceneLocal.flyingPulses.push({
+          from: sensor,
+          to: target,
+          progress: 0,
+          speed: 0.0007 + Math.random() * 0.0008,
+          color: INPUTS[sensor].color
+        });
+      }
+      // advance + draw + cull
+      sceneLocal.flyingPulses.forEach(p => { p.progress += p.speed * 16; });
+      sceneLocal.flyingPulses = sceneLocal.flyingPulses.filter(p => p.progress < 1.05);
+      sceneLocal.flyingPulses.forEach(p => {
+        drawPathwaySegment(ctx, p.from, p.to, { color: p.color, active: 0.55 });
+        drawSignalPulse(ctx, p.from, p.to, Math.min(1, p.progress), { color: p.color });
+      });
       ctx.restore();
+      // Heading pill — readable backdrop over the brain
       ctx.save();
       ctx.globalAlpha = fade;
-      ctx.font = '700 26px -apple-system, system-ui';
-      ctx.fillStyle = '#c7d2fe';
+      const titleText = 'Billions of those signals build entire brain systems';
+      const subText = 'stimulus enters, the brain processes, response leaves';
+      ctx.font = '700 24px -apple-system, system-ui';
+      const titleW = ctx.measureText(titleText).width;
+      const pillW = titleW + 60;
+      const pillX = W/2 - pillW/2;
+      const pillY = 16;
+      const pillH = 78;
+      // shadow
+      ctx.shadowBlur = 26;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+      ctx.fillStyle = 'rgba(10, 12, 20, 0.92)';
+      if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(pillX, pillY, pillW, pillH, 14); ctx.fill(); }
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(199, 210, 254, 0.30)';
+      ctx.lineWidth = 1;
+      if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(pillX, pillY, pillW, pillH, 14); ctx.stroke(); }
+      // top highlight
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+      ctx.lineWidth = 1;
+      if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(pillX + 1, pillY + 1, pillW - 2, pillH/2, 14); ctx.stroke(); }
+      ctx.font = '700 24px -apple-system, system-ui';
+      ctx.fillStyle = '#e0e7ff';
       ctx.textAlign = 'center';
-      ctx.fillText('Billions of those signals build entire brain systems', W/2, 110);
-      ctx.font = '400 16px -apple-system, system-ui';
-      ctx.fillStyle = '#a0a0a0';
-      ctx.fillText('stimulus enters, the brain processes, response leaves', W/2, 140);
+      ctx.fillText(titleText, W/2, 45);
+      ctx.font = '400 15px -apple-system, system-ui';
+      ctx.fillStyle = '#a5b4fc';
+      ctx.fillText(subText, W/2, 72);
       ctx.restore();
     }
   },
@@ -2263,7 +2309,7 @@ function drawConceptSynapse(ctx, cx, cy, progress, t) {
 const sceneBrainMap = {
   phase: 'Step 2: The Brain Map',
   phaseColor: '#c4b5fd',
-  notes: "Meet the major regions of the brain and the sensory systems that feed them. Each region has a job. Key processing assignments by lobe: <strong>occipital = vision, temporal = hearing + language + memory, parietal = touch + pain + spatial awareness, frontal = decision-making and planning</strong>. Deep structures handle specialized work: <strong>thalamus = sensory relay, amygdala = fear, hippocampus = memory, hypothalamus = body regulation, nucleus accumbens = reward, basal ganglia = action selection, cerebellum = balance, brain stem = survival</strong>.",
+  notes: "Meet the major regions of the brain and the sensory systems that feed them. Each region has a job. Key processing assignments by lobe: <strong>occipital = vision, temporal = hearing + language + memory, parietal = touch + pain + spatial awareness, frontal = decision-making and planning</strong>. Deep structures handle specialized work: <strong>thalamus = sensory relay, amygdala = fear, hippocampus = memory, hypothalamus = body regulation, nucleus accumbens = reward, basal ganglia = action selection, cerebellum = balance, brain stem = survival</strong>. The <strong>limbic system</strong> is the emotional and memory cluster: amygdala, hippocampus, hypothalamus, and nearby structures. Sensory signals reach the brain through named nerves: <strong>optic nerve</strong> (eye), <strong>auditory nerve</strong> (ear), <strong>olfactory bulb</strong> (nose), and <strong>sensory neurons</strong> from the skin running up the spinal cord.",
   notebook: "<strong>Click every region and every sensory organ</strong> in the simulation. For each one, write a one-line summary in your notes. Then make a key matching each <strong>sensory modality</strong> to its processing lobe: <strong>vision → occipital, hearing → temporal, touch/pain → parietal, smell → limbic (hippocampus + amygdala, skips thalamus)</strong>. You will use this map for every scenario coming up.",
   setup() {
     clearField();
@@ -2528,9 +2574,9 @@ const sceneUniversalPathway = {
 const sceneReflex = {
   phase: 'Step 4: The Reflex Arc (Touch + Pain Shortcut)',
   phaseColor: C.skin,
-  notes: "Special case: a reflex arc <strong>skips the brain</strong>. You touch a hot stove. <strong>Pain and touch receptors in the skin</strong> send the signal up to the <strong>spinal cord</strong>, which fires an instant motor command BACK DOWN to the muscle. Your hand pulls away BEFORE the pain reaches conscious awareness. The pain signal still continues up to the brain: <strong>thalamus → parietal lobe</strong> (the parietal lobe is the brain's <strong>touch and pain processor</strong>), so you feel it a moment later. The protective movement has already happened. <strong>Reflexes save you because they skip the long trip to the cortex.</strong>",
-  notebook: "Add a row to your tracker table: <strong>STIMULUS</strong> = heat / pain, <strong>SENSORY MODALITY</strong> = touch + pain (skin receptors), <strong>BRAIN REGIONS</strong> = spinal cord only for the reflex; later <strong>thalamus → parietal lobe</strong> for conscious pain, <strong>RESPONSE</strong> = muscle pulls hand away. Write the rule: <strong>parietal lobe = touch and pain processing.</strong>",
-  pathwayKey: "Heat (pain) <span class='arrow'>→</span> Skin receptors <span class='arrow'>→</span> Spinal cord (REFLEX, skips brain) <span class='arrow'>→</span> Motor neuron <span class='arrow'>→</span> Muscle pulls hand away",
+  notes: "Special case: a reflex arc <strong>skips the brain</strong>. You touch a hot stove (or step on a sharp object). <strong>Pain and touch receptors in the skin</strong> fire a signal up the <strong>sensory neuron</strong> to the <strong>spinal cord</strong>, which fires an instant motor command BACK DOWN through a <strong>motor neuron</strong> to the muscle. Your hand (or foot) pulls away BEFORE the pain reaches conscious awareness. The pain signal continues up to the brain: <strong>thalamus → parietal lobe → frontal lobe</strong>, so you feel it a moment later. The parietal lobe is the brain's <strong>touch and pain processor</strong>. <strong>Reflexes save you because they skip the cortex.</strong>",
+  notebook: "Add a row to your tracker: <strong>STIMULUS</strong> = heat or sharp object, <strong>SENSORY MODALITY</strong> = touch + pain (skin receptors → sensory neuron), <strong>BRAIN REGIONS</strong> = spinal cord (reflex); then thalamus → parietal → frontal (conscious pain), <strong>RESPONSE</strong> = muscle pulls hand or foot away. Write the rule: <strong>reflex arc = spinal cord shortcut. Parietal lobe = touch + pain.</strong>",
+  pathwayKey: "Heat or sharp object <span class='arrow'>→</span> Skin receptors <span class='arrow'>→</span> Sensory neuron <span class='arrow'>→</span> Spinal cord (REFLEX) <span class='arrow'>→</span> Motor neuron <span class='arrow'>→</span> Muscle pulls away &nbsp;|&nbsp; then pain signal continues: Spinal <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Parietal lobe <span class='arrow'>→</span> Frontal lobe (you feel it)",
   setup() {
     clearField();
     sceneLocal = {
@@ -2638,9 +2684,9 @@ function drawResponseBadge(ctx, x, y, emoji, label, color) {
 const sceneFear = {
   phase: 'Step 5: Fear Pathway (Hearing)',
   phaseColor: C.amygdala,
-  notes: "A loud crash behind you. Your heart pounds, your body tenses. The brain has a <strong>fear shortcut</strong>. The sound (<strong>auditory information</strong>) enters through the ear, hits the <strong>thalamus</strong>, and the thalamus sends a fast warning straight to the <strong>amygdala</strong> — the brain's <strong>fear alarm</strong>. The amygdala fires the <strong>hypothalamus</strong>, which activates the <strong>adrenal gland</strong> to release adrenaline. Heart rate up, breathing up, body ready. The <strong>temporal lobe</strong> (hearing + language) catches up a moment later so you can identify what you heard.",
-  notebook: "Add a row to your tracker: <strong>STIMULUS</strong> = loud crash, <strong>SENSORY MODALITY</strong> = hearing (ear), <strong>BRAIN REGIONS</strong> = thalamus → amygdala → hypothalamus, <strong>RESPONSE</strong> = adrenal gland releases adrenaline, heart races. Write the rules: <strong>amygdala = fear alarm. Temporal lobe = hearing.</strong>",
-  pathwayKey: "Loud crash <span class='arrow'>→</span> Ear (hearing) <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Amygdala (fear alarm) <span class='arrow'>→</span> Hypothalamus <span class='arrow'>→</span> Adrenal gland (adrenaline) <span class='arrow'>→</span> Heart races, body tenses",
+  notes: "A loud crash behind you. Your heart pounds, your body tenses, you turn around. The brain has a <strong>fear shortcut</strong>. Sound enters the <strong>ear</strong>, travels up the <strong>auditory nerve</strong> to the <strong>thalamus</strong>, and the thalamus sends a fast warning straight to the <strong>amygdala</strong> — the brain's <strong>fear alarm</strong>. The amygdala fires the <strong>hypothalamus</strong>, which activates the <strong>brain stem</strong> and the <strong>adrenal gland</strong> (adrenaline). Heart rate up. To turn your body, the signal also fires through the <strong>motor cortex → spinal cord → muscles</strong>. The <strong>temporal lobe</strong> (hearing + language) catches up so you can identify what you heard.",
+  notebook: "Add a row to your tracker: <strong>STIMULUS</strong> = loud crash, <strong>SENSORY MODALITY</strong> = hearing (ear → auditory nerve), <strong>BRAIN REGIONS</strong> = thalamus → temporal lobe → amygdala → hypothalamus → brain stem, <strong>RESPONSE</strong> = adrenal gland (adrenaline) + motor cortex → spinal cord → muscles turn body. Write the rules: <strong>auditory nerve carries sound. Amygdala = fear alarm. Temporal lobe = hearing.</strong>",
+  pathwayKey: "Loud crash <span class='arrow'>→</span> Ear <span class='arrow'>→</span> Auditory nerve <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Temporal lobe <span class='arrow'>→</span> Amygdala <span class='arrow'>→</span> Hypothalamus <span class='arrow'>→</span> Brain stem + Adrenal gland (adrenaline) + Motor cortex <span class='arrow'>→</span> Spinal cord <span class='arrow'>→</span> Muscles turn the body",
   setup() {
     clearField();
     sceneLocal = {
@@ -2675,9 +2721,9 @@ const sceneFear = {
 const sceneSmellMemory = {
   phase: 'Step 6: Memory Pathway (Smell)',
   phaseColor: C.nose,
-  notes: "You smell cookies. Suddenly you remember your grandma's kitchen. Why is smell so emotional? <strong>Smell is the only sense that does NOT route through the thalamus first.</strong> Smell receptors in the nose project almost directly into the <strong>limbic system</strong>: the <strong>hippocampus</strong> (memory formation and retrieval) and the <strong>amygdala</strong> (emotion). That direct connection is why a smell can trigger a powerful memory before you can even name what you smelled. The <strong>temporal lobe</strong> (which houses hearing, language, and memory storage) then helps you put words to the memory.",
-  notebook: "Add a row to your tracker: <strong>STIMULUS</strong> = smell of cookies, <strong>SENSORY MODALITY</strong> = smell / olfactory (nose), <strong>BRAIN REGIONS</strong> = hippocampus → temporal lobe → frontal lobe (skips thalamus), <strong>RESPONSE</strong> = recall a memory. Star this row and write: <strong>smell skips the thalamus. Hippocampus = memory.</strong>",
-  pathwayKey: "Smell <span class='arrow'>→</span> Nose <span class='arrow'>→</span> Hippocampus (memory) <span class='arrow'>→</span> Temporal lobe <span class='arrow'>→</span> Frontal lobe (you recognize the memory). Smell is special — it skips the thalamus.",
+  notes: "You smell cookies. Suddenly you remember your grandma's kitchen. Why is smell so emotional? <strong>Smell is the only sense that does NOT route through the thalamus first.</strong> Smell molecules trigger <strong>olfactory receptors</strong> in the nose, which fire signals through the <strong>olfactory bulb</strong> straight into the <strong>limbic system</strong>: the <strong>hippocampus</strong> (memory formation and retrieval), the <strong>amygdala</strong> (emotion), and on to the <strong>frontal lobe</strong>. The <strong>temporal lobe</strong> (hearing, language, memory storage) then helps you put words to the memory. That direct route is why a smell can trigger a powerful memory before you can name what you smelled.",
+  notebook: "Add a row to your tracker: <strong>STIMULUS</strong> = smell of cookies, <strong>SENSORY MODALITY</strong> = smell / olfactory (olfactory receptors → olfactory bulb), <strong>BRAIN REGIONS</strong> = hippocampus → amygdala → frontal lobe (skips thalamus), <strong>RESPONSE</strong> = emotional memory returns. Star this row and write: <strong>smell skips the thalamus. Olfactory bulb feeds the limbic system. Hippocampus = memory.</strong>",
+  pathwayKey: "Smell <span class='arrow'>→</span> Olfactory receptors (nose) <span class='arrow'>→</span> Olfactory bulb <span class='arrow'>→</span> Hippocampus (memory) + Amygdala (emotion) <span class='arrow'>→</span> Frontal lobe (you name it). Smell is special — it skips the thalamus and goes straight to the limbic system.",
   setup() {
     clearField();
     sceneLocal = {
@@ -2756,7 +2802,7 @@ const sceneMovement = {
 const sceneVision = {
   phase: 'Step 10: Vision Deep Dive',
   phaseColor: C.occipital,
-  notes: "Light bounces off the world and lands on the <strong>retina</strong>, a layer of light-sensitive cells at the back of the eye. The retina converts light into neural signals, which travel along the <strong>optic nerve</strong> to the <strong>thalamus</strong>, then to the <strong>occipital lobe</strong>, the brain's <strong>vision processor</strong>. The <strong>parietal lobe</strong> places the image in space (spatial awareness) and the <strong>frontal lobe</strong> interprets what you are looking at. <strong>The eye detects information, but the brain constructs perception.</strong>",
+  notes: "Light bounces off the world, passes through the <strong>cornea and lens</strong>, and lands on the <strong>retina</strong>, a layer of light-sensitive cells at the back of the eye. The retina converts light into neural signals, which travel along the <strong>optic nerve</strong> to the <strong>thalamus</strong>, then to the <strong>occipital lobe</strong>, the brain's <strong>vision processor</strong>. The <strong>parietal and frontal lobes</strong> interpret context and patterns — sometimes incorrectly (optical illusions). The <strong>parietal lobe</strong> places the image in space (spatial awareness). <strong>The eye detects information, but the brain constructs perception.</strong>",
   notebook: "Add a row: <strong>STIMULUS</strong> = light, <strong>SENSORY MODALITY</strong> = vision (eye → retina), <strong>BRAIN REGIONS</strong> = thalamus → occipital lobe → parietal lobe → frontal lobe, <strong>RESPONSE</strong> = you see and recognize. Write the rules: <strong>occipital lobe = vision. Parietal lobe = spatial awareness.</strong> You will dissect a real eye soon — sketch the eye structure too: cornea → lens → retina → optic nerve.",
   pathwayKey: "Light <span class='arrow'>→</span> Cornea + lens <span class='arrow'>→</span> Retina <span class='arrow'>→</span> Optic nerve <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Occipital lobe (builds image) <span class='arrow'>→</span> Parietal lobe (places it in space) <span class='arrow'>→</span> Frontal lobe (you recognize it)",
   setup() {
@@ -2921,8 +2967,8 @@ const sceneReward = {
 const sceneHijack = {
   phase: 'Step 8: Reward Hijacking (Addiction Case Study)',
   phaseColor: '#f472b6',
-  notes: "Some stimuli activate the reward pathway much more strongly than natural rewards: <strong>addictive drugs, certain foods, gambling, phone notifications</strong>. Each big hit of <strong>dopamine</strong> tells the brain <strong>this matters more than anything</strong>. The <strong>hippocampus</strong> memorizes the cues. The <strong>amygdala</strong> tags them with urgency. The <strong>hypothalamus</strong> drives bodily craving. Over time the <strong>frontal lobe</strong> struggles to inhibit the pull, and the cue alone (a notification, a smell, a place) triggers craving. This is not moral failure — it is the brain strengthening pathways that fire together. <strong>And because the brain can change, recovery and rewiring are real.</strong>",
-  notebook: "Add a row: <strong>STIMULUS</strong> = addictive cue (notification, substance), <strong>SENSORY MODALITY</strong> = often vision (seeing the cue), <strong>BRAIN REGIONS</strong> = nucleus accumbens + hippocampus + amygdala + hypothalamus, <strong>RESPONSE</strong> = craving + compulsion. Write the rules: <strong>cues + memory = craving. Neuroplasticity means change is possible.</strong> Toggle <strong>Normal Reward</strong> vs <strong>Hijacked</strong> below and compare.",
+  notes: "Some stimuli activate the reward pathway much more strongly than natural rewards: <strong>addictive drugs, certain foods, gambling, phone notifications</strong>. Picture a person with addiction seeing a needle: light enters the <strong>eye</strong>, travels the <strong>optic nerve</strong> through the <strong>thalamus</strong> to the <strong>occipital lobe</strong> (vision). The <strong>hippocampus</strong> retrieves drug-related memories, the <strong>amygdala</strong> tags the cue with emotional urgency, the <strong>nucleus accumbens</strong> activates and floods the brain with <strong>dopamine</strong> (expectation of reward), and the <strong>hypothalamus</strong> drives bodily craving. The <strong>frontal lobe</strong> struggles with <strong>impulse control</strong> against the pull. This is not moral failure — it is the brain strengthening pathways that fire together. <strong>Because the brain can change, recovery and rewiring are real.</strong>",
+  notebook: "Add a row: <strong>STIMULUS</strong> = addictive cue (needle, notification), <strong>SENSORY MODALITY</strong> = vision (eye → optic nerve), <strong>BRAIN REGIONS</strong> = thalamus → occipital → hippocampus (drug memories) + amygdala (urgency) + nucleus accumbens (dopamine) + hypothalamus (craving) + frontal lobe (impulse control challenged), <strong>RESPONSE</strong> = craving + drug-seeking behavior. Write the rules: <strong>cues + memory = craving. Frontal lobe = impulse control. Neuroplasticity means change is possible.</strong>",
   pathwayKey: "Cue (notification / drug / image) <span class='arrow'>→</span> Sensory input <span class='arrow'>→</span> Nucleus accumbens (BIG dopamine) <span class='arrow'>→</span> Hippocampus (cue memory) + Amygdala (urgency) + Hypothalamus (craving) <span class='arrow'>→</span> Frontal lobe inhibition challenged",
   setup() {
     clearField();
@@ -3030,19 +3076,22 @@ const sceneHijack = {
 // =====================================================
 const SCENARIOS = [
   { id: 'stove', emoji: '🔥', label: 'Hot stove', stim: 'Touch a hot stove', resp: 'Hand pulls back, pain after', nodes: ['skin','spinal','motorNeuron','muscle'], extra: ['skin','spinal','thalamus','parietal','frontal'], extraLabel: 'pain registers',
-    key: "Heat <span class='arrow'>→</span> Skin <span class='arrow'>→</span> Spinal cord (reflex) <span class='arrow'>→</span> Motor neuron <span class='arrow'>→</span> Muscle (hand pulls back); pain trails: Skin <span class='arrow'>→</span> Spinal <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Parietal <span class='arrow'>→</span> Frontal",
+    key: "Heat <span class='arrow'>→</span> Skin receptors <span class='arrow'>→</span> Sensory neuron <span class='arrow'>→</span> Spinal cord (reflex arc) <span class='arrow'>→</span> Motor neuron <span class='arrow'>→</span> Muscles pull hand away. Pain signal continues: Spinal <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Parietal lobe <span class='arrow'>→</span> Frontal lobe. The spinal cord creates the first response before conscious awareness.",
+    color: '#ff6b6b', isReflex: true },
+  { id: 'sharp', emoji: '🦶', label: 'Sharp object', stim: 'Step barefoot on a sharp object', resp: 'Jump back in pain', nodes: ['skin','spinal','motorNeuron','muscle'], extra: ['skin','spinal','thalamus','parietal','frontal'], extraLabel: 'pain registers',
+    key: "Pain stimulus <span class='arrow'>→</span> Skin receptors <span class='arrow'>→</span> Sensory neuron <span class='arrow'>→</span> Spinal cord (reflex arc) <span class='arrow'>→</span> Motor neuron <span class='arrow'>→</span> Muscles pull foot away. Pain signal continues to Thalamus <span class='arrow'>→</span> Parietal lobe <span class='arrow'>→</span> Frontal lobe. Protective reflexes help the body react quickly to injury.",
     color: '#ff6b6b', isReflex: true },
   { id: 'crash', emoji: '💥', label: 'Loud crash', stim: 'Hear a loud crash at night', resp: 'Heart races, body tenses, turn fast', nodes: ['ear','thalamus','amygdala','hypothalamus','brainstem','gland'], extra: ['ear','thalamus','temporal','frontal'], extraLabel: 'cortex catches up',
-    key: "Sound <span class='arrow'>→</span> Ear <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Amygdala (fear alarm) <span class='arrow'>→</span> Hypothalamus <span class='arrow'>→</span> Brain stem &amp; gland (adrenaline)",
+    key: "Sound <span class='arrow'>→</span> Ear <span class='arrow'>→</span> Auditory nerve <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Temporal lobe <span class='arrow'>→</span> Amygdala (fear alarm) <span class='arrow'>→</span> Hypothalamus <span class='arrow'>→</span> Brain stem + Adrenal gland (adrenaline) <span class='arrow'>→</span> Heart rate up; also Motor cortex <span class='arrow'>→</span> Spinal cord <span class='arrow'>→</span> Muscles turn body. The amygdala rapidly processes danger and activates fight-or-flight.",
     color: '#f87171' },
   { id: 'cookies', emoji: '🍪', label: 'Cookies smell', stim: 'Smell cookies baking', resp: 'Triggered memory + emotion', nodes: ['nose','hippocampus','temporal','frontal'], extra: ['nose','amygdala'], extraLabel: 'emotion tag',
-    key: "Smell <span class='arrow'>→</span> Nose <span class='arrow'>→</span> Hippocampus (memory) + Amygdala (emotion) <span class='arrow'>→</span> Temporal <span class='arrow'>→</span> Frontal (you name the memory)",
+    key: "Smell <span class='arrow'>→</span> Olfactory receptors (nose) <span class='arrow'>→</span> Olfactory bulb <span class='arrow'>→</span> Hippocampus (memory) + Amygdala (emotion) <span class='arrow'>→</span> Frontal lobe. Smell pathways skip the thalamus and are strongly connected to memory and emotion systems.",
     color: '#f472b6' },
   { id: 'ball', emoji: '⚾', label: 'Ball flies at you', stim: 'A ball flies toward your face', resp: 'You catch or duck', nodes: ['eye','thalamus','occipital','parietal','motor','spinal','motorNeuron','muscle'],
     key: "Visual motion <span class='arrow'>→</span> Eye <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Occipital + Parietal (spatial tracking) <span class='arrow'>→</span> Motor cortex <span class='arrow'>→</span> Spinal cord <span class='arrow'>→</span> Muscle (catch or duck)",
     color: C.parietal },
-  { id: 'snake', emoji: '🐍', label: 'Snake or stick?', stim: 'See what looks like a snake', resp: 'Jump back, then realize it was a stick', nodes: ['eye','thalamus','amygdala','hypothalamus','brainstem'], extra: ['eye','thalamus','occipital','temporal','frontal'], extraLabel: 'frontal lobe re-evaluates',
-    key: "Visual <span class='arrow'>→</span> Eye <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Amygdala (fast fear) <span class='arrow'>→</span> Hypothalamus + Brain stem (jump back); slower: Thalamus <span class='arrow'>→</span> Occipital <span class='arrow'>→</span> Temporal <span class='arrow'>→</span> Frontal (\"oh, just a stick\")",
+  { id: 'snake', emoji: '🐍', label: 'Snake or stick?', stim: 'See what looks like a snake', resp: 'Jump back, then realize it was a stick', nodes: ['eye','thalamus','amygdala','hypothalamus','brainstem','motor','spinal','motorNeuron','muscle'], extra: ['eye','thalamus','occipital','frontal'], extraLabel: 'frontal lobe re-evaluates',
+    key: "Visual stimulus <span class='arrow'>→</span> Eye <span class='arrow'>→</span> Optic nerve <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Amygdala (fast fear) <span class='arrow'>→</span> Hypothalamus <span class='arrow'>→</span> Brain stem <span class='arrow'>→</span> Motor cortex <span class='arrow'>→</span> Spinal cord <span class='arrow'>→</span> Jumping movement. Frontal lobe later re-evaluates the image. Fear pathways prioritize speed over accuracy.",
     color: '#f87171' },
   { id: 'bike', emoji: '🚴', label: 'Ride a bike', stim: 'Ride a bike, maintain balance', resp: 'Pedal + balance + adjust', nodes: ['frontal','basalganglia','motor','cerebellum','spinal','motorNeuron','muscle'],
     key: "Intent <span class='arrow'>→</span> Frontal <span class='arrow'>→</span> Basal ganglia <span class='arrow'>→</span> Motor cortex <span class='arrow'>→</span> Cerebellum (balance + timing) <span class='arrow'>→</span> Spinal <span class='arrow'>→</span> Motor neuron <span class='arrow'>→</span> Muscle",
@@ -3053,8 +3102,8 @@ const SCENARIOS = [
   { id: 'name', emoji: '👂', label: 'Hear your name', stim: 'Hear your name in a crowded room', resp: 'Attention snaps toward the sound', nodes: ['ear','thalamus','temporal','frontal','motor','spinal','motorNeuron','muscle'],
     key: "Sound <span class='arrow'>→</span> Ear <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Temporal (language) <span class='arrow'>→</span> Frontal (attention) <span class='arrow'>→</span> Motor cortex <span class='arrow'>→</span> Spinal <span class='arrow'>→</span> Neck muscles turn head",
     color: C.temporal },
-  { id: 'win', emoji: '🏆', label: 'Win the game', stim: 'Win a championship game', resp: 'Excitement, energy, joy', nodes: ['eye','thalamus','accumbens','frontal'], extra: ['accumbens','hippocampus'], extraLabel: 'remember this',
-    key: "Visual + outcome <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Nucleus accumbens (dopamine) <span class='arrow'>→</span> Frontal (motivation) + Hippocampus (memorize win)",
+  { id: 'win', emoji: '🏆', label: 'Win the game', stim: 'Win a championship game', resp: 'Excitement, energy, joy, celebration', nodes: ['eye','thalamus','frontal','accumbens','hypothalamus','motor','spinal','motorNeuron','muscle'], extra: ['accumbens','hippocampus'], extraLabel: 'remember the win',
+    key: "Visual and social input <span class='arrow'>→</span> Eye <span class='arrow'>→</span> Optic nerve <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Frontal lobe (interprets success) <span class='arrow'>→</span> Nucleus accumbens / reward pathway (dopamine) <span class='arrow'>→</span> Hypothalamus (body arousal) <span class='arrow'>→</span> Motor cortex <span class='arrow'>→</span> Smiling, cheering, movement. Reward pathways reinforce behaviors associated with pleasure and success.",
     color: '#fbbf24' },
   { id: 'phone', emoji: '📱', label: 'Phone notification', stim: 'See a notification on your phone', resp: 'Want to check it now', nodes: ['eye','thalamus','accumbens','hypothalamus'], extra: ['accumbens','hippocampus','amygdala'], extraLabel: 'cue strengthens',
     key: "Visual cue <span class='arrow'>→</span> Eye <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Nucleus accumbens (dopamine spike) <span class='arrow'>→</span> Hypothalamus (urge) + Hippocampus (cue memory) + Amygdala (urgency tag)",
@@ -3063,8 +3112,17 @@ const SCENARIOS = [
     key: "Smell + taste <span class='arrow'>→</span> Nose <span class='arrow'>→</span> Nucleus accumbens (dopamine) <span class='arrow'>→</span> Hypothalamus (body state) + Frontal (motivation) + Hippocampus (memorize)",
     color: '#fbbf24' },
   { id: 'illusion', emoji: '🎨', label: 'Optical illusion', stim: 'Look at an optical illusion', resp: 'Brain perceives the wrong thing', nodes: ['eye','thalamus','occipital','parietal','frontal'],
-    key: "Light pattern <span class='arrow'>→</span> Eye <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Occipital (builds picture) <span class='arrow'>→</span> Parietal (interprets) <span class='arrow'>→</span> Frontal (you perceive). The eye saw correctly, the brain constructed differently.",
+    key: "Light <span class='arrow'>→</span> Eye <span class='arrow'>→</span> Optic nerve <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Occipital lobe (builds picture) <span class='arrow'>→</span> Parietal + Frontal lobes (interpret context and patterns). The eye saw correctly, the brain constructed differently.",
     color: C.occipital },
+  { id: 'hug', emoji: '🤗', label: 'Warm hug', stim: 'Get a warm hug from someone you trust', resp: 'Feel calm and comforted', nodes: ['skin','thalamus','parietal','hypothalamus'], extra: ['parietal','amygdala'], extraLabel: 'limbic system soothes',
+    key: "Gentle touch <span class='arrow'>→</span> Skin receptors <span class='arrow'>→</span> Sensory neurons <span class='arrow'>→</span> Spinal cord <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Parietal lobe <span class='arrow'>→</span> Limbic system (amygdala calms) <span class='arrow'>→</span> Hypothalamus (calming body response). Comfortable touch activates emotional systems that reduce stress.",
+    color: '#fbbf24' },
+  { id: 'song', emoji: '🎵', label: 'Favorite song', stim: 'Hear your favorite song', resp: 'Feel emotional and nostalgic', nodes: ['ear','thalamus','temporal','hippocampus','amygdala','hypothalamus'],
+    key: "Sound <span class='arrow'>→</span> Ear <span class='arrow'>→</span> Auditory nerve <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Temporal lobe (hearing) <span class='arrow'>→</span> Hippocampus (memory) + Amygdala (emotion) <span class='arrow'>→</span> Hypothalamus (emotional body response). Music activates memory and emotion at the same time.",
+    color: C.temporal },
+  { id: 'needle', emoji: '💉', label: 'Drug cue (addiction)', stim: 'Person with addiction sees a needle', resp: 'Intense craving and urge to use', nodes: ['eye','thalamus','occipital','hippocampus','accumbens','hypothalamus'], extra: ['accumbens','amygdala','frontal'], extraLabel: 'frontal struggles with impulse control',
+    key: "Visual cue <span class='arrow'>→</span> Eye <span class='arrow'>→</span> Optic nerve <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Occipital lobe <span class='arrow'>→</span> Hippocampus (drug-related memories) + Amygdala (emotional salience) <span class='arrow'>→</span> Nucleus accumbens (dopamine expectation) <span class='arrow'>→</span> Hypothalamus (craving) <span class='arrow'>→</span> Frontal lobe (impulse control challenged) <span class='arrow'>→</span> Drug-seeking behavior. Addiction hijacks reward and learning systems.",
+    color: '#f472b6' },
 ];
 
 const sceneScenarioLab = {
