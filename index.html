@@ -1616,6 +1616,12 @@ function drawPathwaySegment(ctx, fromKey, toKey, opts = {}) {
   const a = getNode(fromKey);
   const b = getNode(toKey);
   if (!a || !b) return;
+  // Motor neuron has its own anatomical axon drawn from the soma all the way
+  // to the muscle terminals. Suppress the pathway segment line for that hop
+  // so we don't draw a second parallel line on top of the axon. The animated
+  // pulse still travels along the pathway curve and reads as the impulse
+  // running down the axon.
+  if (fromKey === 'motorNeuron' && toKey === 'muscle') return;
   const active = opts.active != null ? opts.active : 0; // 0..1 how active this segment is
   const dim = opts.dim || 0;
   const color = opts.color || '#c7d2fe';
