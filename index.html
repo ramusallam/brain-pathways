@@ -2879,74 +2879,84 @@ function drawAnimatedSequence(ctx, nodes, progress, color, t) {
 
 function drawStimulusBadge(ctx, x, y, emoji, label, color) {
   ctx.save();
-  ctx.shadowBlur = 22;
-  ctx.shadowColor = rgba(color, 0.45);
-  const bg = ctx.createLinearGradient(0, y - 30, 0, y + 30);
-  bg.addColorStop(0, 'rgba(28, 32, 48, 0.95)');
-  bg.addColorStop(1, 'rgba(14, 18, 30, 0.95)');
+  ctx.shadowBlur = 14;
+  ctx.shadowColor = rgba(color, 0.35);
+  const bg = ctx.createLinearGradient(0, y - 24, 0, y + 24);
+  bg.addColorStop(0, 'rgba(28, 32, 48, 0.92)');
+  bg.addColorStop(1, 'rgba(14, 18, 30, 0.92)');
   ctx.fillStyle = bg;
-  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x - 90, y - 30, 180, 60, 12); ctx.fill(); }
+  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x - 90, y - 24, 180, 48, 10); ctx.fill(); }
   ctx.shadowBlur = 0;
-  ctx.strokeStyle = rgba(color, 0.6);
-  ctx.lineWidth = 1.2;
-  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x - 90, y - 30, 180, 60, 12); ctx.stroke(); }
-  ctx.font = '32px -apple-system, system-ui';
+  ctx.strokeStyle = rgba(color, 0.5);
+  ctx.lineWidth = 1;
+  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x - 90, y - 24, 180, 48, 10); ctx.stroke(); }
+  ctx.font = '20px -apple-system, system-ui';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(emoji, x - 60, y);
+  ctx.fillText(emoji, x - 66, y);
   ctx.fillStyle = color;
-  ctx.font = '700 11px -apple-system, system-ui';
+  ctx.font = '700 10px -apple-system, system-ui';
   ctx.textAlign = 'left';
-  ctx.fillText('STIMULUS', x - 38, y - 8);
+  ctx.fillText('STIMULUS', x - 44, y - 6);
   ctx.fillStyle = '#e5e7eb';
-  ctx.font = '400 13px -apple-system, system-ui';
-  ctx.fillText(label, x - 38, y + 12);
+  ctx.font = '400 12px -apple-system, system-ui';
+  ctx.fillText(label, x - 44, y + 11);
   ctx.restore();
 }
 
 function drawResponseBadge(ctx, x, y, emoji, label, color) {
   ctx.save();
-  ctx.shadowBlur = 22;
-  ctx.shadowColor = rgba(color, 0.45);
-  const bg = ctx.createLinearGradient(0, y - 30, 0, y + 30);
-  bg.addColorStop(0, 'rgba(28, 32, 48, 0.95)');
-  bg.addColorStop(1, 'rgba(14, 18, 30, 0.95)');
+  ctx.shadowBlur = 14;
+  ctx.shadowColor = rgba(color, 0.35);
+  const bg = ctx.createLinearGradient(0, y - 24, 0, y + 24);
+  bg.addColorStop(0, 'rgba(28, 32, 48, 0.92)');
+  bg.addColorStop(1, 'rgba(14, 18, 30, 0.92)');
   ctx.fillStyle = bg;
-  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x - 100, y - 30, 200, 60, 12); ctx.fill(); }
+  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x - 100, y - 24, 200, 48, 10); ctx.fill(); }
   ctx.shadowBlur = 0;
-  ctx.strokeStyle = rgba(color, 0.6);
-  ctx.lineWidth = 1.2;
-  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x - 100, y - 30, 200, 60, 12); ctx.stroke(); }
-  ctx.font = '30px -apple-system, system-ui';
+  ctx.strokeStyle = rgba(color, 0.5);
+  ctx.lineWidth = 1;
+  if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x - 100, y - 24, 200, 48, 10); ctx.stroke(); }
+  ctx.font = '20px -apple-system, system-ui';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(emoji, x - 68, y);
+  ctx.fillText(emoji, x - 76, y);
   ctx.fillStyle = color;
-  ctx.font = '700 11px -apple-system, system-ui';
+  ctx.font = '700 10px -apple-system, system-ui';
   ctx.textAlign = 'left';
-  ctx.fillText('RESPONSE', x - 44, y - 8);
+  ctx.fillText('RESPONSE', x - 52, y - 6);
   ctx.fillStyle = '#e5e7eb';
-  ctx.font = '400 13px -apple-system, system-ui';
-  ctx.fillText(label, x - 44, y + 12);
+  ctx.font = '400 12px -apple-system, system-ui';
+  ctx.fillText(label, x - 52, y + 11);
   ctx.restore();
 }
 
 // Shared step-by-step scene overlay: stim badge (bottom-left), response badge
-// (top-right), and the "Sensory modality:" header + instruction subtitle at
-// top-center-left. Used by sceneReflex, sceneFear, sceneSmellMemory,
-// sceneReward, sceneMovement.
+// (top-right), and a tiny modality pill at top-center. The Next Step
+// instruction lives in the notebook prompt below the canvas — no need to
+// repeat it on top of the brain. Used by sceneReflex, sceneFear,
+// sceneSmellMemory, sceneReward, sceneMovement.
 function drawSceneOverlay(ctx, opts) {
   drawStimulusBadge(ctx, 90, 540, opts.stimEmoji, opts.stimLabel, opts.stimColor);
   drawResponseBadge(ctx, 1490, 240, opts.respEmoji, opts.respLabel, opts.respColor);
-  ctx.save();
-  ctx.font = '700 14px -apple-system, system-ui';
-  ctx.fillStyle = opts.modalityColor;
-  ctx.textAlign = 'left';
-  ctx.fillText('Sensory modality: ' + opts.modality, 460, 30);
-  ctx.fillStyle = '#a0a0a0';
-  ctx.font = '400 12px -apple-system, system-ui';
-  ctx.fillText(opts.instruction, 460, 50);
-  ctx.restore();
+  if (opts.modality) {
+    ctx.save();
+    ctx.font = '700 11px -apple-system, system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const text = opts.modality;
+    const pad = 12;
+    const w = ctx.measureText(text).width + pad * 2;
+    const px = W / 2 - w / 2, py = 18, ph = 22;
+    ctx.fillStyle = 'rgba(10, 12, 20, 0.75)';
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(px, py, w, ph, 11); ctx.fill(); }
+    ctx.strokeStyle = rgba(opts.modalityColor, 0.45);
+    ctx.lineWidth = 1;
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(px, py, w, ph, 11); ctx.stroke(); }
+    ctx.fillStyle = opts.modalityColor;
+    ctx.fillText(text, W / 2, py + ph / 2 + 0.5);
+    ctx.restore();
+  }
 }
 
 // ----------------------------------------------------------------------------
