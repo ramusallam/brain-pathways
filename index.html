@@ -2925,7 +2925,7 @@ const sceneFear = {
   pathwayKey: "Loud crash <span class='arrow'>→</span> Ear <span class='arrow'>→</span> Auditory nerve <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Temporal lobe <span class='arrow'>→</span> Amygdala <span class='arrow'>→</span> Hypothalamus <span class='arrow'>→</span> Brain stem + Adrenal gland (adrenaline) + Motor cortex <span class='arrow'>→</span> Spinal cord <span class='arrow'>→</span> Muscles turn the body",
   setup() {
     clearField();
-    setupStepByStep(['ear', 'thalamus', 'amygdala', 'hypothalamus', 'gland']);
+    setupStepByStep(['ear', 'thalamus', 'temporal', 'amygdala', 'hypothalamus', 'gland']);
   },
   update(dt) { updateStepByStep(dt); },
   draw(ctx, t) {
@@ -3139,12 +3139,12 @@ function drawEyeDiagram(ctx, x, y, t) {
 const sceneReward = {
   phase: 'Step 6: Reward Pathway',
   phaseColor: C.accumbens,
-  notes: "You eat your favorite dessert. You win the big game. Your phone buzzes with a notification. All three light up the same pathway. <strong>Dopamine</strong> released into the <strong>nucleus accumbens</strong> tells the brain <strong>this is worth doing again</strong>. The <strong>frontal lobe</strong> tracks the outcome. The <strong>hippocampus</strong> remembers the cue. Reward is normal and important — it is how you learn what to pursue.",
-  notebook: "<strong>Press Next Step →</strong> to follow the impulse one piece at a time. Write the flow as you go:<br><strong>Reward cue → eye → thalamus → nucleus accumbens (dopamine) → frontal lobe → hippocampus</strong><br>Then one sentence: <strong>Dopamine in the nucleus accumbens says \"do that again\" — it is how the brain learns what to pursue.</strong>",
-  pathwayKey: "Reward cue <span class='arrow'>→</span> Eye / sensory input <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Nucleus accumbens (dopamine release) <span class='arrow'>→</span> Frontal lobe (motivation) <span class='arrow'>→</span> Hippocampus (remember the cue)",
+  notes: "You eat your favorite dessert. You win the big game. Your phone buzzes with a notification. All three light up the same pathway. The visual cue travels <strong>eye → thalamus → occipital lobe</strong> (vision processing) before it reaches the reward circuit. Then <strong>dopamine</strong> released into the <strong>nucleus accumbens</strong> tells the brain <strong>this is worth doing again</strong>. The <strong>frontal lobe</strong> tracks the outcome. The <strong>hippocampus</strong> remembers the cue. Reward is normal and important — it is how you learn what to pursue.",
+  notebook: "<strong>Press Next Step →</strong> to follow the impulse one piece at a time. Write the flow as you go:<br><strong>Reward cue → eye → thalamus → occipital lobe → nucleus accumbens (dopamine) → frontal lobe → hippocampus</strong><br>Then one sentence: <strong>Dopamine in the nucleus accumbens says \"do that again\" — it is how the brain learns what to pursue.</strong>",
+  pathwayKey: "Reward cue <span class='arrow'>→</span> Eye / sensory input <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Occipital lobe (vision) <span class='arrow'>→</span> Nucleus accumbens (dopamine release) <span class='arrow'>→</span> Frontal lobe (motivation) <span class='arrow'>→</span> Hippocampus (remember the cue)",
   setup() {
     clearField();
-    setupStepByStep(['eye', 'thalamus', 'accumbens', 'frontal', 'hippocampus']);
+    setupStepByStep(['eye', 'thalamus', 'occipital', 'accumbens', 'frontal', 'hippocampus']);
   },
   update(dt) { updateStepByStep(dt); },
   draw(ctx, t) {
@@ -3172,12 +3172,12 @@ const sceneHijack = {
   phaseColor: '#f472b6',
   notes: "Some stimuli activate the reward pathway much more strongly than natural rewards: <strong>addictive drugs, certain foods, gambling, phone notifications</strong>. Picture a person with addiction seeing a needle: light enters the <strong>eye</strong>, travels the <strong>optic nerve</strong> through the <strong>thalamus</strong> to the <strong>occipital lobe</strong> (vision). The <strong>hippocampus</strong> retrieves drug-related memories, the <strong>amygdala</strong> tags the cue with emotional urgency, the <strong>nucleus accumbens</strong> activates and floods the brain with <strong>dopamine</strong> (expectation of reward), and the <strong>hypothalamus</strong> drives bodily craving. The <strong>frontal lobe</strong> struggles with <strong>impulse control</strong> against the pull. This is not moral failure — it is the brain strengthening pathways that fire together. <strong>Because the brain can change, recovery and rewiring are real.</strong>",
   notebook: "<strong>Press Next Step →</strong> to follow the impulse one piece at a time. Write the flow as you go:<br><strong>Drug cue → eye → optic nerve → thalamus → occipital → hippocampus → amygdala → nucleus accumbens (BIG dopamine) → hypothalamus (craving) → frontal lobe (impulse control challenged)</strong><br>Compare Normal vs Hijacked using the toggle. Then one sentence: <strong>Addiction strengthens the cue → craving pathway. Because the brain can change, recovery is possible.</strong>",
-  pathwayKey: "Normal: Reward cue <span class='arrow'>→</span> Eye <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Nucleus accumbens (small dopamine) <span class='arrow'>→</span> Frontal lobe regulates &nbsp;|&nbsp; Hijacked: Drug cue <span class='arrow'>→</span> Eye <span class='arrow'>→</span> Optic nerve <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Occipital <span class='arrow'>→</span> Hippocampus (drug memories) <span class='arrow'>→</span> Amygdala (urgency) <span class='arrow'>→</span> Nucleus accumbens (BIG dopamine) <span class='arrow'>→</span> Hypothalamus (craving) <span class='arrow'>→</span> Frontal lobe inhibition challenged",
+  pathwayKey: "Normal: Reward cue <span class='arrow'>→</span> Eye <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Occipital lobe (vision) <span class='arrow'>→</span> Nucleus accumbens (small dopamine) <span class='arrow'>→</span> Frontal lobe regulates &nbsp;|&nbsp; Hijacked: Drug cue <span class='arrow'>→</span> Eye <span class='arrow'>→</span> Optic nerve <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Occipital <span class='arrow'>→</span> Hippocampus (drug memories) <span class='arrow'>→</span> Amygdala (urgency) <span class='arrow'>→</span> Nucleus accumbens (BIG dopamine) <span class='arrow'>→</span> Hypothalamus (craving) <span class='arrow'>→</span> Frontal lobe inhibition challenged",
   setup() {
     clearField();
     sceneLocal = {
       mode: 'hijack',
-      normalNodes: ['eye', 'thalamus', 'accumbens', 'frontal'],
+      normalNodes: ['eye', 'thalamus', 'occipital', 'accumbens', 'frontal'],
       hijackNodes: ['eye', 'thalamus', 'occipital', 'hippocampus', 'amygdala', 'accumbens', 'hypothalamus', 'frontal'],
     };
     setupStepByStep(sceneLocal.hijackNodes);
@@ -3237,7 +3237,7 @@ const SCENARIOS = [
   { id: 'sharp', emoji: '🦶', label: 'Sharp object', stim: 'Step barefoot on a sharp object', resp: 'Jump back in pain', nodes: ['skin','spinal','motorNeuron','muscle'], extra: ['skin','spinal','thalamus','parietal','frontal'], extraLabel: 'pain registers',
     key: "Pain stimulus <span class='arrow'>→</span> Skin receptors <span class='arrow'>→</span> Sensory neuron <span class='arrow'>→</span> Spinal cord (reflex arc) <span class='arrow'>→</span> Motor neuron <span class='arrow'>→</span> Muscles pull foot away. Pain signal continues to Thalamus <span class='arrow'>→</span> Parietal lobe <span class='arrow'>→</span> Frontal lobe. Protective reflexes help the body react quickly to injury.",
     color: '#ff6b6b', isReflex: true },
-  { id: 'crash', emoji: '💥', label: 'Loud crash', stim: 'Hear a loud crash at night', resp: 'Heart races, body tenses, turn fast', nodes: ['ear','thalamus','amygdala','hypothalamus','brainstem','gland'], extra: ['ear','thalamus','temporal','frontal'], extraLabel: 'cortex catches up',
+  { id: 'crash', emoji: '💥', label: 'Loud crash', stim: 'Hear a loud crash at night', resp: 'Heart races, body tenses, turn fast', nodes: ['ear','thalamus','temporal','amygdala','hypothalamus','brainstem','gland'], extra: ['ear','thalamus','temporal','frontal'], extraLabel: 'cortex catches up',
     key: "Sound <span class='arrow'>→</span> Ear <span class='arrow'>→</span> Auditory nerve <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Temporal lobe <span class='arrow'>→</span> Amygdala (fear alarm) <span class='arrow'>→</span> Hypothalamus <span class='arrow'>→</span> Brain stem + Adrenal gland (adrenaline) <span class='arrow'>→</span> Heart rate up; also Motor cortex <span class='arrow'>→</span> Spinal cord <span class='arrow'>→</span> Muscles turn body. The amygdala rapidly processes danger and activates fight-or-flight.",
     color: '#f87171' },
   { id: 'cookies', emoji: '🍪', label: 'Cookies smell', stim: 'Smell cookies baking', resp: 'Triggered memory + emotion', nodes: ['nose','hippocampus','temporal','frontal'], extra: ['nose','amygdala'], extraLabel: 'emotion tag',
@@ -3246,7 +3246,7 @@ const SCENARIOS = [
   { id: 'ball', emoji: '⚾', label: 'Ball flies at you', stim: 'A ball flies toward your face', resp: 'You catch or duck', nodes: ['eye','thalamus','occipital','parietal','motor','spinal','motorNeuron','muscle'],
     key: "Visual motion <span class='arrow'>→</span> Eye <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Occipital + Parietal (spatial tracking) <span class='arrow'>→</span> Motor cortex <span class='arrow'>→</span> Spinal cord <span class='arrow'>→</span> Muscle (catch or duck)",
     color: C.parietal },
-  { id: 'snake', emoji: '🐍', label: 'Snake or stick?', stim: 'See what looks like a snake', resp: 'Jump back, then realize it was a stick', nodes: ['eye','thalamus','amygdala','hypothalamus','brainstem','motor','spinal','motorNeuron','muscle'], extra: ['eye','thalamus','occipital','frontal'], extraLabel: 'frontal lobe re-evaluates',
+  { id: 'snake', emoji: '🐍', label: 'Snake or stick?', stim: 'See what looks like a snake', resp: 'Jump back, then realize it was a stick', nodes: ['eye','thalamus','occipital','amygdala','hypothalamus','brainstem','motor','spinal','motorNeuron','muscle'], extra: ['eye','thalamus','occipital','frontal'], extraLabel: 'frontal lobe re-evaluates',
     key: "Visual stimulus <span class='arrow'>→</span> Eye <span class='arrow'>→</span> Optic nerve <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Amygdala (fast fear) <span class='arrow'>→</span> Hypothalamus <span class='arrow'>→</span> Brain stem <span class='arrow'>→</span> Motor cortex <span class='arrow'>→</span> Spinal cord <span class='arrow'>→</span> Jumping movement. Frontal lobe later re-evaluates the image. Fear pathways prioritize speed over accuracy.",
     color: '#f87171' },
   { id: 'bike', emoji: '🚴', label: 'Ride a bike', stim: 'Ride a bike, maintain balance', resp: 'Pedal + balance + adjust', nodes: ['frontal','basalganglia','motor','cerebellum','spinal','motorNeuron','muscle'],
@@ -3258,10 +3258,10 @@ const SCENARIOS = [
   { id: 'name', emoji: '👂', label: 'Hear your name', stim: 'Hear your name in a crowded room', resp: 'Attention snaps toward the sound', nodes: ['ear','thalamus','temporal','frontal','motor','spinal','motorNeuron','muscle'],
     key: "Sound <span class='arrow'>→</span> Ear <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Temporal (language) <span class='arrow'>→</span> Frontal (attention) <span class='arrow'>→</span> Motor cortex <span class='arrow'>→</span> Spinal <span class='arrow'>→</span> Neck muscles turn head",
     color: C.temporal },
-  { id: 'win', emoji: '🏆', label: 'Win the game', stim: 'Win a championship game', resp: 'Excitement, energy, joy, celebration', nodes: ['eye','thalamus','frontal','accumbens','hypothalamus','motor','spinal','motorNeuron','muscle'], extra: ['accumbens','hippocampus'], extraLabel: 'remember the win',
+  { id: 'win', emoji: '🏆', label: 'Win the game', stim: 'Win a championship game', resp: 'Excitement, energy, joy, celebration', nodes: ['eye','thalamus','occipital','frontal','accumbens','hypothalamus','motor','spinal','motorNeuron','muscle'], extra: ['accumbens','hippocampus'], extraLabel: 'remember the win',
     key: "Visual and social input <span class='arrow'>→</span> Eye <span class='arrow'>→</span> Optic nerve <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Frontal lobe (interprets success) <span class='arrow'>→</span> Nucleus accumbens / reward pathway (dopamine) <span class='arrow'>→</span> Hypothalamus (body arousal) <span class='arrow'>→</span> Motor cortex <span class='arrow'>→</span> Smiling, cheering, movement. Reward pathways reinforce behaviors associated with pleasure and success.",
     color: '#fbbf24' },
-  { id: 'phone', emoji: '📱', label: 'Phone notification', stim: 'See a notification on your phone', resp: 'Want to check it now', nodes: ['eye','thalamus','accumbens','hypothalamus'], extra: ['accumbens','hippocampus','amygdala'], extraLabel: 'cue strengthens',
+  { id: 'phone', emoji: '📱', label: 'Phone notification', stim: 'See a notification on your phone', resp: 'Want to check it now', nodes: ['eye','thalamus','occipital','accumbens','hypothalamus'], extra: ['accumbens','hippocampus','amygdala'], extraLabel: 'cue strengthens',
     key: "Visual cue <span class='arrow'>→</span> Eye <span class='arrow'>→</span> Thalamus <span class='arrow'>→</span> Nucleus accumbens (dopamine spike) <span class='arrow'>→</span> Hypothalamus (urge) + Hippocampus (cue memory) + Amygdala (urgency tag)",
     color: '#f472b6' },
   { id: 'dessert', emoji: '🍰', label: 'Favorite dessert', stim: 'Eat your favorite dessert', resp: 'Pleasure + satisfaction', nodes: ['nose','accumbens','hypothalamus'], extra: ['accumbens','frontal','hippocampus'], extraLabel: 'reinforcement',
@@ -3379,9 +3379,9 @@ const CHALLENGES = [
     success: 'Reflex arc. Spinal cord fires the motor command before the brain feels pain.'
   },
   { id: 'c2', label: 'Hear a loud sound at night', emoji: '💥', stim: 'Loud crash', resp: 'Heart racing',
-    correct: ['ear','thalamus','amygdala','hypothalamus','gland'],
-    hint: 'Fear responses go through the amygdala. The hypothalamus drives the body alarm.',
-    success: 'Fear pathway. Amygdala fires fast, hypothalamus alarms the body.'
+    correct: ['ear','thalamus','temporal','amygdala','hypothalamus','gland'],
+    hint: 'Sound routes through the temporal lobe (hearing) before the amygdala alarms the body via the hypothalamus.',
+    success: 'Fear pathway. Sound → thalamus → temporal lobe → amygdala → hypothalamus alarms the body.'
   },
   { id: 'c3', label: 'Smell cookies and remember childhood', emoji: '🍪', stim: 'Cookie smell', resp: 'Childhood memory',
     correct: ['nose','hippocampus','temporal','frontal'],
@@ -3389,9 +3389,9 @@ const CHALLENGES = [
     success: 'Olfactory pathway. Smell goes directly to memory and emotion.'
   },
   { id: 'c4', label: 'See a reward and feel motivated', emoji: '🏆', stim: 'Reward cue', resp: 'Pleasure + motivation',
-    correct: ['eye','thalamus','accumbens','frontal'],
-    hint: 'Reward pathways always involve the nucleus accumbens.',
-    success: 'Reward pathway. Nucleus accumbens releases dopamine, frontal lobe joins for motivation.'
+    correct: ['eye','thalamus','occipital','accumbens','frontal'],
+    hint: 'Visual cues route through the occipital lobe before they reach the reward circuit.',
+    success: 'Reward pathway. Vision is processed in the occipital lobe, then the nucleus accumbens releases dopamine and the frontal lobe joins for motivation.'
   },
   { id: 'c5', label: 'Ride a bike maintaining balance', emoji: '🚴', stim: 'Decide to ride', resp: 'Pedal + balance',
     correct: ['frontal','motor','cerebellum','spinal','motorNeuron','muscle'],
@@ -3647,10 +3647,10 @@ const sceneReflect = {
       cycleT: 0,
       pathways: [
         { name: 'Touch / Pain', color: '#fbbf24', nodes: ['skin', 'thalamus', 'parietal', 'frontal'] },
-        { name: 'Hearing (Fear)', color: '#f87171', nodes: ['ear', 'thalamus', 'amygdala', 'hypothalamus', 'gland'] },
+        { name: 'Hearing (Fear)', color: '#f87171', nodes: ['ear', 'thalamus', 'temporal', 'amygdala', 'hypothalamus', 'gland'] },
         { name: 'Smell (Memory)', color: '#f472b6', nodes: ['nose', 'hippocampus', 'temporal', 'frontal'] },
         { name: 'Vision', color: '#a78bfa', nodes: ['eye', 'thalamus', 'occipital', 'parietal', 'frontal'] },
-        { name: 'Reward', color: '#fbbf24', nodes: ['eye', 'thalamus', 'accumbens', 'frontal'] },
+        { name: 'Reward', color: '#fbbf24', nodes: ['eye', 'thalamus', 'occipital', 'accumbens', 'frontal'] },
         { name: 'Motor Coordination', color: '#4ade80', nodes: ['frontal', 'basalganglia', 'motor', 'cerebellum', 'spinal', 'motorNeuron', 'muscle'] },
       ]
     };
